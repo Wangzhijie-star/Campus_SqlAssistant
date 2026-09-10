@@ -1,0 +1,2 @@
+# Campus_SqlAssistant
+聚焦于学生工作中常见的筛选、查询、整理Excel表格中的学生信息以及一些计算，建立的sql查询智能体
