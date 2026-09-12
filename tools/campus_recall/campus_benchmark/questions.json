@@ -1,0 +1,2160 @@
+{
+  "version": "campus-26-v1",
+  "label_status": "合成问题与初始人工设计标签，需业务复核；非独立人工双标注",
+  "label_policy": "最具体必要术语集合。多返回的父级指标按严格额外项计分，并不自动代表它对生成SQL有害。通过率无需同时标注分子/分母，除非问题分别请求这些人数。",
+  "split_policy": "同一术语的四种单意图表达、同一多指标组合及同一负例主题均不跨集。各集术语覆盖不同，不能直接横向比较分数。",
+  "cases": [
+    {
+      "id": "T01-1",
+      "group": "T01",
+      "split": "dev",
+      "category": "single",
+      "question": "请查询曾不及格。",
+      "expected": [
+        "曾不及格"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T01-2",
+      "group": "T01",
+      "split": "dev",
+      "category": "single",
+      "question": "请展示历史挂科。",
+      "expected": [
+        "曾不及格"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T01-3",
+      "group": "T01",
+      "split": "dev",
+      "category": "single",
+      "question": "查历史上出现过没考过的课程，后来过了也包括。",
+      "expected": [
+        "曾不及格"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T01-4",
+      "group": "T01",
+      "split": "dev",
+      "category": "single",
+      "question": "列出以前未通过的全部课程记录，不因后来通过而排除。",
+      "expected": [
+        "曾不及格"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T02-1",
+      "group": "T02",
+      "split": "dev",
+      "category": "single",
+      "question": "请查询尚不及格。",
+      "expected": [
+        "尚不及格"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T02-2",
+      "group": "T02",
+      "split": "dev",
+      "category": "single",
+      "question": "请展示当前仍然挂科状态。",
+      "expected": [
+        "尚不及格"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T02-3",
+      "group": "T02",
+      "split": "dev",
+      "category": "single",
+      "question": "只查目前仍没考过的课程，已经通过的排除。",
+      "expected": [
+        "尚不及格"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T02-4",
+      "group": "T02",
+      "split": "dev",
+      "category": "single",
+      "question": "报表截止时还有哪些课程处于未通过状态？",
+      "expected": [
+        "尚不及格"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T03-1",
+      "group": "T03",
+      "split": "dev",
+      "category": "single",
+      "question": "请查询通过率。",
+      "expected": [
+        "通过率"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T03-2",
+      "group": "T03",
+      "split": "dev",
+      "category": "single",
+      "question": "请展示合格率。",
+      "expected": [
+        "通过率"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T03-3",
+      "group": "T03",
+      "split": "dev",
+      "category": "single",
+      "question": "高数有非零分数的人里考到60分及以上的占百分之多少？空成绩不算。",
+      "expected": [
+        "通过率"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T03-4",
+      "group": "T03",
+      "split": "dev",
+      "category": "single",
+      "question": "计算2404班高数达标学生的百分比，60分算达标，零分和空值排除。",
+      "expected": [
+        "通过率"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T04-1",
+      "group": "T04",
+      "split": "validation",
+      "category": "single",
+      "question": "请查询总成绩。",
+      "expected": [
+        "总成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T04-2",
+      "group": "T04",
+      "split": "validation",
+      "category": "single",
+      "question": "请展示课程总成绩。",
+      "expected": [
+        "总成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T04-3",
+      "group": "T04",
+      "split": "validation",
+      "category": "single",
+      "question": "查学生成绩明细里每个人高数这门课最后记录的分数。",
+      "expected": [
+        "总成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T04-4",
+      "group": "T04",
+      "split": "validation",
+      "category": "single",
+      "question": "我要看这门课每个学生的最终成绩字段，不是多门课的分数之和。",
+      "expected": [
+        "总成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T05-1",
+      "group": "T05",
+      "split": "dev",
+      "category": "single",
+      "question": "请查询平均成绩。",
+      "expected": [
+        "平均成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T05-2",
+      "group": "T05",
+      "split": "dev",
+      "category": "single",
+      "question": "请展示平均分。",
+      "expected": [
+        "平均成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T05-3",
+      "group": "T05",
+      "split": "dev",
+      "category": "single",
+      "question": "读取排名报表里学生各科的平均分数字段，不重新算。",
+      "expected": [
+        "平均成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T05-4",
+      "group": "T05",
+      "split": "dev",
+      "category": "single",
+      "question": "展示排名表已有的平均成绩数值，不要名次。",
+      "expected": [
+        "平均成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T06-1",
+      "group": "T06",
+      "split": "validation",
+      "category": "single",
+      "question": "请查询加权学分成绩。",
+      "expected": [
+        "加权学分成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T06-2",
+      "group": "T06",
+      "split": "validation",
+      "category": "single",
+      "question": "请展示加权成绩。",
+      "expected": [
+        "加权学分成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T06-3",
+      "group": "T06",
+      "split": "validation",
+      "category": "single",
+      "question": "查看排名表里用学分作为权重的成绩数值，直接读现有字段。",
+      "expected": [
+        "加权学分成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T06-4",
+      "group": "T06",
+      "split": "validation",
+      "category": "single",
+      "question": "列出报表已经给出的加权成绩数值，不要排序名次。",
+      "expected": [
+        "加权学分成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T07-1",
+      "group": "T07",
+      "split": "dev",
+      "category": "single",
+      "question": "请查询GPA。",
+      "expected": [
+        "GPA"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T07-2",
+      "group": "T07",
+      "split": "dev",
+      "category": "single",
+      "question": "请展示平均学分绩点。",
+      "expected": [
+        "GPA"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T07-3",
+      "group": "T07",
+      "split": "dev",
+      "category": "single",
+      "question": "读取学生排名表里的绩点数值，不要排名。",
+      "expected": [
+        "GPA"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T07-4",
+      "group": "T07",
+      "split": "dev",
+      "category": "single",
+      "question": "查看报表中每个学生的平均学分绩点是多少。",
+      "expected": [
+        "GPA"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T08-1",
+      "group": "T08",
+      "split": "dev",
+      "category": "single",
+      "question": "请查询要求总学分。",
+      "expected": [
+        "要求总学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T08-2",
+      "group": "T08",
+      "split": "dev",
+      "category": "single",
+      "question": "请展示要求学分。",
+      "expected": [
+        "要求总学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T08-3",
+      "group": "T08",
+      "split": "dev",
+      "category": "single",
+      "question": "排名表要求每个学生修够多少学分？",
+      "expected": [
+        "要求总学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T08-4",
+      "group": "T08",
+      "split": "dev",
+      "category": "single",
+      "question": "查报表规定需要达到的学分总量，不是已经修过的。",
+      "expected": [
+        "要求总学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T09-1",
+      "group": "T09",
+      "split": "validation",
+      "category": "single",
+      "question": "请查询已修课程学分。",
+      "expected": [
+        "已修课程学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T09-2",
+      "group": "T09",
+      "split": "validation",
+      "category": "single",
+      "question": "请展示已修学分。",
+      "expected": [
+        "已修课程学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T09-3",
+      "group": "T09",
+      "split": "validation",
+      "category": "single",
+      "question": "查看排名表已经修读的课程对应学分字段，不要实践那一栏。",
+      "expected": [
+        "已修课程学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T09-4",
+      "group": "T09",
+      "split": "validation",
+      "category": "single",
+      "question": "列出报表中学生课程已修学分的现有值，不重新计算。",
+      "expected": [
+        "已修课程学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T10-1",
+      "group": "T10",
+      "split": "dev",
+      "category": "single",
+      "question": "请查询已修自主实践学分。",
+      "expected": [
+        "已修自主实践学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T10-2",
+      "group": "T10",
+      "split": "dev",
+      "category": "single",
+      "question": "请展示自主实践已修学分。",
+      "expected": [
+        "已修自主实践学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T10-3",
+      "group": "T10",
+      "split": "dev",
+      "category": "single",
+      "question": "单独查看学生自主实践已经修读的学分数。",
+      "expected": [
+        "已修自主实践学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T10-4",
+      "group": "T10",
+      "split": "dev",
+      "category": "single",
+      "question": "读取排名表里自主实践那一栏已修学分，不要普通课程那一栏。",
+      "expected": [
+        "已修自主实践学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T11-1",
+      "group": "T11",
+      "split": "dev",
+      "category": "single",
+      "question": "请查询曾不及格学分。",
+      "expected": [
+        "曾不及格学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T11-2",
+      "group": "T11",
+      "split": "dev",
+      "category": "single",
+      "question": "请展示历史不及格学分。",
+      "expected": [
+        "曾不及格学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T11-3",
+      "group": "T11",
+      "split": "dev",
+      "category": "single",
+      "question": "查排名表中过去没考过的课程所对应的学分字段。",
+      "expected": [
+        "曾不及格学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T11-4",
+      "group": "T11",
+      "split": "dev",
+      "category": "single",
+      "question": "读取报表历史不及格的学分量，不是现在还未通过的学分。",
+      "expected": [
+        "曾不及格学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T12-1",
+      "group": "T12",
+      "split": "validation",
+      "category": "single",
+      "question": "请查询尚不及格学分。",
+      "expected": [
+        "尚不及格学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T12-2",
+      "group": "T12",
+      "split": "validation",
+      "category": "single",
+      "question": "请展示当前未通过学分。",
+      "expected": [
+        "尚不及格学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T12-3",
+      "group": "T12",
+      "split": "validation",
+      "category": "single",
+      "question": "排名表里目前没通过的课程对应多少学分？",
+      "expected": [
+        "尚不及格学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T12-4",
+      "group": "T12",
+      "split": "validation",
+      "category": "single",
+      "question": "读取仍未通过课程的学分汇总字段，不看历史累计那一栏。",
+      "expected": [
+        "尚不及格学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T13-1",
+      "group": "T13",
+      "split": "test",
+      "category": "single",
+      "question": "请查询学分。",
+      "expected": [
+        "学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T13-2",
+      "group": "T13",
+      "split": "test",
+      "category": "single",
+      "question": "请展示课程学分。",
+      "expected": [
+        "学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T13-3",
+      "group": "T13",
+      "split": "test",
+      "category": "single",
+      "question": "高数这门课程本身是多少个学分？",
+      "expected": [
+        "学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T13-4",
+      "group": "T13",
+      "split": "test",
+      "category": "single",
+      "question": "查看每门课赋予的学分值，不是学生累计的学分总额。",
+      "expected": [
+        "学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T14-1",
+      "group": "T14",
+      "split": "validation",
+      "category": "single",
+      "question": "请查询修读方式。",
+      "expected": [
+        "修读方式"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T14-2",
+      "group": "T14",
+      "split": "validation",
+      "category": "single",
+      "question": "请展示修读类型。",
+      "expected": [
+        "修读方式"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T14-3",
+      "group": "T14",
+      "split": "validation",
+      "category": "single",
+      "question": "读取成绩明细里学生修读课程的方式类别。",
+      "expected": [
+        "修读方式"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T14-4",
+      "group": "T14",
+      "split": "validation",
+      "category": "single",
+      "question": "查课程记录中的修读类型字段，不要课程性质字段。",
+      "expected": [
+        "修读方式"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T15-1",
+      "group": "T15",
+      "split": "dev",
+      "category": "single",
+      "question": "请查询课程属性。",
+      "expected": [
+        "课程属性"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T15-2",
+      "group": "T15",
+      "split": "dev",
+      "category": "single",
+      "question": "请展示课程性质。",
+      "expected": [
+        "课程属性"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T15-3",
+      "group": "T15",
+      "split": "dev",
+      "category": "single",
+      "question": "读取成绩明细中课程本身的性质分类。",
+      "expected": [
+        "课程属性"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T15-4",
+      "group": "T15",
+      "split": "dev",
+      "category": "single",
+      "question": "按每门课的属性分类列出课程，使用源表类别。",
+      "expected": [
+        "课程属性"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T16-1",
+      "group": "T16",
+      "split": "dev",
+      "category": "single",
+      "question": "请查询考试时间。",
+      "expected": [
+        "考试时间"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T16-2",
+      "group": "T16",
+      "split": "dev",
+      "category": "single",
+      "question": "请展示考试日期。",
+      "expected": [
+        "考试时间"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T16-3",
+      "group": "T16",
+      "split": "dev",
+      "category": "single",
+      "question": "高数这条成绩记录对应哪一天考试？",
+      "expected": [
+        "考试时间"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T16-4",
+      "group": "T16",
+      "split": "dev",
+      "category": "single",
+      "question": "列出学生实际参加考试的日期字段。",
+      "expected": [
+        "考试时间"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T17-1",
+      "group": "T17",
+      "split": "test",
+      "category": "single",
+      "question": "请查询学年学期。",
+      "expected": [
+        "学年学期"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T17-2",
+      "group": "T17",
+      "split": "test",
+      "category": "single",
+      "question": "请展示开课学期。",
+      "expected": [
+        "学年学期"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T17-3",
+      "group": "T17",
+      "split": "test",
+      "category": "single",
+      "question": "读取历史不及格报表中记录所属的学年度及学期标识。",
+      "expected": [
+        "学年学期"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T17-4",
+      "group": "T17",
+      "split": "test",
+      "category": "single",
+      "question": "这些历史报表记录属于哪个学年、哪个学期？只返回学期字段。",
+      "expected": [
+        "学年学期"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T18-1",
+      "group": "T18",
+      "split": "test",
+      "category": "single",
+      "question": "请查询不及格次数。",
+      "expected": [
+        "不及格次数"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T18-2",
+      "group": "T18",
+      "split": "test",
+      "category": "single",
+      "question": "请展示未通过次数。",
+      "expected": [
+        "不及格次数"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T18-3",
+      "group": "T18",
+      "split": "test",
+      "category": "single",
+      "question": "某学生这门课一共没考过几次？读取现有次数字段。",
+      "expected": [
+        "不及格次数"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T18-4",
+      "group": "T18",
+      "split": "test",
+      "category": "single",
+      "question": "查看未通过课程表记录的失败次数，不是失败课程门数。",
+      "expected": [
+        "不及格次数"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T19-1",
+      "group": "T19",
+      "split": "dev",
+      "category": "single",
+      "question": "请查询GPA班级排名。",
+      "expected": [
+        "GPA班级排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T19-2",
+      "group": "T19",
+      "split": "dev",
+      "category": "single",
+      "question": "请展示班级绩点排名。",
+      "expected": [
+        "GPA班级排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T19-3",
+      "group": "T19",
+      "split": "dev",
+      "category": "single",
+      "question": "只看学生绩点在自己班里的名次，不要专业名次。",
+      "expected": [
+        "GPA班级排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T19-4",
+      "group": "T19",
+      "split": "dev",
+      "category": "single",
+      "question": "读取报表里按绩点比较的班内位次。",
+      "expected": [
+        "GPA班级排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T20-1",
+      "group": "T20",
+      "split": "test",
+      "category": "single",
+      "question": "请查询GPA专业排名。",
+      "expected": [
+        "GPA专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T20-2",
+      "group": "T20",
+      "split": "test",
+      "category": "single",
+      "question": "请展示专业绩点排名。",
+      "expected": [
+        "GPA专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T20-3",
+      "group": "T20",
+      "split": "test",
+      "category": "single",
+      "question": "学生绩点在整个专业排第几？使用已有名次。",
+      "expected": [
+        "GPA专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T20-4",
+      "group": "T20",
+      "split": "test",
+      "category": "single",
+      "question": "只查专业范围内的绩点位次，不要班内位次。",
+      "expected": [
+        "GPA专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T21-1",
+      "group": "T21",
+      "split": "test",
+      "category": "single",
+      "question": "请查询加权班级排名。",
+      "expected": [
+        "加权班级排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T21-2",
+      "group": "T21",
+      "split": "test",
+      "category": "single",
+      "question": "请展示班级加权排名。",
+      "expected": [
+        "加权班级排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T21-3",
+      "group": "T21",
+      "split": "test",
+      "category": "single",
+      "question": "查学生按加权成绩在本班排第几，使用报表现有名次。",
+      "expected": [
+        "加权班级排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T21-4",
+      "group": "T21",
+      "split": "test",
+      "category": "single",
+      "question": "读取以加权分数比较的班内位次，不要绩点位次。",
+      "expected": [
+        "加权班级排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T22-1",
+      "group": "T22",
+      "split": "dev",
+      "category": "single",
+      "question": "请查询加权专业排名。",
+      "expected": [
+        "加权专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T22-2",
+      "group": "T22",
+      "split": "dev",
+      "category": "single",
+      "question": "请展示专业加权排名。",
+      "expected": [
+        "加权专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T22-3",
+      "group": "T22",
+      "split": "dev",
+      "category": "single",
+      "question": "查学生按加权成绩在全专业排第几。",
+      "expected": [
+        "加权专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T22-4",
+      "group": "T22",
+      "split": "dev",
+      "category": "single",
+      "question": "读取报表中专业范围的加权分数名次，不是班级名次。",
+      "expected": [
+        "加权专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T23-1",
+      "group": "T23",
+      "split": "validation",
+      "category": "single",
+      "question": "请查询平均成绩班级排名。",
+      "expected": [
+        "平均成绩班级排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T23-2",
+      "group": "T23",
+      "split": "validation",
+      "category": "single",
+      "question": "请展示班级平均分排名。",
+      "expected": [
+        "平均成绩班级排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T23-3",
+      "group": "T23",
+      "split": "validation",
+      "category": "single",
+      "question": "读取学生按平均分在自己班里的名次。",
+      "expected": [
+        "平均成绩班级排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T23-4",
+      "group": "T23",
+      "split": "validation",
+      "category": "single",
+      "question": "只看平均分的班内位次，不要加权分数名次。",
+      "expected": [
+        "平均成绩班级排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T24-1",
+      "group": "T24",
+      "split": "test",
+      "category": "single",
+      "question": "请查询平均成绩专业排名。",
+      "expected": [
+        "平均成绩专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T24-2",
+      "group": "T24",
+      "split": "test",
+      "category": "single",
+      "question": "请展示专业平均分排名。",
+      "expected": [
+        "平均成绩专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T24-3",
+      "group": "T24",
+      "split": "test",
+      "category": "single",
+      "question": "学生按平均分在整个专业排第几？读取报表值。",
+      "expected": [
+        "平均成绩专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T24-4",
+      "group": "T24",
+      "split": "test",
+      "category": "single",
+      "question": "只看专业范围的平均分名次，不要班级名次。",
+      "expected": [
+        "平均成绩专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T25-1",
+      "group": "T25",
+      "split": "dev",
+      "category": "single",
+      "question": "请查询有效成绩人数。",
+      "expected": [
+        "有效成绩人数"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T25-2",
+      "group": "T25",
+      "split": "dev",
+      "category": "single",
+      "question": "请展示有效成绩学生数。",
+      "expected": [
+        "有效成绩人数"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T25-3",
+      "group": "T25",
+      "split": "dev",
+      "category": "single",
+      "question": "高数排除零分和空成绩后，还有多少名学生有有效分数？",
+      "expected": [
+        "有效成绩人数"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T25-4",
+      "group": "T25",
+      "split": "dev",
+      "category": "single",
+      "question": "统计高数有非空且非零成绩的学生人数，按学号去重。",
+      "expected": [
+        "有效成绩人数"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T26-1",
+      "group": "T26",
+      "split": "validation",
+      "category": "single",
+      "question": "请查询通过人数。",
+      "expected": [
+        "通过人数"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T26-2",
+      "group": "T26",
+      "split": "validation",
+      "category": "single",
+      "question": "请展示合格人数。",
+      "expected": [
+        "通过人数"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T26-3",
+      "group": "T26",
+      "split": "validation",
+      "category": "single",
+      "question": "高数达到60分及以上的学生有多少人？",
+      "expected": [
+        "通过人数"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "T26-4",
+      "group": "T26",
+      "split": "validation",
+      "category": "single",
+      "question": "统计高数考到60分或更高分的学生数量，按学号去重。",
+      "expected": [
+        "通过人数"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M01-1",
+      "group": "M01",
+      "split": "dev",
+      "category": "multi",
+      "question": "请分别查询曾不及格和尚不及格。",
+      "expected": [
+        "曾不及格",
+        "尚不及格"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M01-2",
+      "group": "M01",
+      "split": "dev",
+      "category": "multi",
+      "question": "结果中同时展示曾不及格、尚不及格这两项。",
+      "expected": [
+        "曾不及格",
+        "尚不及格"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M01-3",
+      "group": "M01",
+      "split": "dev",
+      "category": "multi",
+      "question": "先查曾不及格，另外再查尚不及格。",
+      "expected": [
+        "曾不及格",
+        "尚不及格"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M01-4",
+      "group": "M01",
+      "split": "dev",
+      "category": "multi",
+      "question": "需要两列结果：曾不及格以及尚不及格。",
+      "expected": [
+        "曾不及格",
+        "尚不及格"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M02-1",
+      "group": "M02",
+      "split": "dev",
+      "category": "multi",
+      "question": "请分别查询平均成绩和加权学分成绩。",
+      "expected": [
+        "平均成绩",
+        "加权学分成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M02-2",
+      "group": "M02",
+      "split": "dev",
+      "category": "multi",
+      "question": "结果中同时展示平均成绩、加权学分成绩这两项。",
+      "expected": [
+        "平均成绩",
+        "加权学分成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M02-3",
+      "group": "M02",
+      "split": "dev",
+      "category": "multi",
+      "question": "先查平均成绩，另外再查加权学分成绩。",
+      "expected": [
+        "平均成绩",
+        "加权学分成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M02-4",
+      "group": "M02",
+      "split": "dev",
+      "category": "multi",
+      "question": "需要两列结果：平均成绩以及加权学分成绩。",
+      "expected": [
+        "平均成绩",
+        "加权学分成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M03-1",
+      "group": "M03",
+      "split": "dev",
+      "category": "multi",
+      "question": "请分别查询GPA和平均成绩。",
+      "expected": [
+        "GPA",
+        "平均成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M03-2",
+      "group": "M03",
+      "split": "dev",
+      "category": "multi",
+      "question": "结果中同时展示GPA、平均成绩这两项。",
+      "expected": [
+        "GPA",
+        "平均成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M03-3",
+      "group": "M03",
+      "split": "dev",
+      "category": "multi",
+      "question": "先查GPA，另外再查平均成绩。",
+      "expected": [
+        "GPA",
+        "平均成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M03-4",
+      "group": "M03",
+      "split": "dev",
+      "category": "multi",
+      "question": "需要两列结果：GPA以及平均成绩。",
+      "expected": [
+        "GPA",
+        "平均成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M04-1",
+      "group": "M04",
+      "split": "dev",
+      "category": "multi",
+      "question": "请分别查询要求总学分和已修课程学分。",
+      "expected": [
+        "要求总学分",
+        "已修课程学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M04-2",
+      "group": "M04",
+      "split": "dev",
+      "category": "multi",
+      "question": "结果中同时展示要求总学分、已修课程学分这两项。",
+      "expected": [
+        "要求总学分",
+        "已修课程学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M04-3",
+      "group": "M04",
+      "split": "dev",
+      "category": "multi",
+      "question": "先查要求总学分，另外再查已修课程学分。",
+      "expected": [
+        "要求总学分",
+        "已修课程学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M04-4",
+      "group": "M04",
+      "split": "dev",
+      "category": "multi",
+      "question": "需要两列结果：要求总学分以及已修课程学分。",
+      "expected": [
+        "要求总学分",
+        "已修课程学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M05-1",
+      "group": "M05",
+      "split": "dev",
+      "category": "multi",
+      "question": "请分别查询通过率和通过人数。",
+      "expected": [
+        "通过率",
+        "通过人数"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M05-2",
+      "group": "M05",
+      "split": "dev",
+      "category": "multi",
+      "question": "结果中同时展示通过率、通过人数这两项。",
+      "expected": [
+        "通过率",
+        "通过人数"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M05-3",
+      "group": "M05",
+      "split": "dev",
+      "category": "multi",
+      "question": "先查通过率，另外再查通过人数。",
+      "expected": [
+        "通过率",
+        "通过人数"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M05-4",
+      "group": "M05",
+      "split": "dev",
+      "category": "multi",
+      "question": "需要两列结果：通过率以及通过人数。",
+      "expected": [
+        "通过率",
+        "通过人数"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M06-1",
+      "group": "M06",
+      "split": "dev",
+      "category": "multi",
+      "question": "请分别查询考试时间和总成绩。",
+      "expected": [
+        "考试时间",
+        "总成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M06-2",
+      "group": "M06",
+      "split": "dev",
+      "category": "multi",
+      "question": "结果中同时展示考试时间、总成绩这两项。",
+      "expected": [
+        "考试时间",
+        "总成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M06-3",
+      "group": "M06",
+      "split": "dev",
+      "category": "multi",
+      "question": "先查考试时间，另外再查总成绩。",
+      "expected": [
+        "考试时间",
+        "总成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M06-4",
+      "group": "M06",
+      "split": "dev",
+      "category": "multi",
+      "question": "需要两列结果：考试时间以及总成绩。",
+      "expected": [
+        "考试时间",
+        "总成绩"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M07-1",
+      "group": "M07",
+      "split": "validation",
+      "category": "multi",
+      "question": "请分别查询曾不及格学分和尚不及格学分。",
+      "expected": [
+        "曾不及格学分",
+        "尚不及格学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M07-2",
+      "group": "M07",
+      "split": "validation",
+      "category": "multi",
+      "question": "结果中同时展示曾不及格学分、尚不及格学分这两项。",
+      "expected": [
+        "曾不及格学分",
+        "尚不及格学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M07-3",
+      "group": "M07",
+      "split": "validation",
+      "category": "multi",
+      "question": "先查曾不及格学分，另外再查尚不及格学分。",
+      "expected": [
+        "曾不及格学分",
+        "尚不及格学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M07-4",
+      "group": "M07",
+      "split": "validation",
+      "category": "multi",
+      "question": "需要两列结果：曾不及格学分以及尚不及格学分。",
+      "expected": [
+        "曾不及格学分",
+        "尚不及格学分"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M08-1",
+      "group": "M08",
+      "split": "validation",
+      "category": "multi",
+      "question": "请分别查询GPA班级排名和GPA专业排名。",
+      "expected": [
+        "GPA班级排名",
+        "GPA专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M08-2",
+      "group": "M08",
+      "split": "validation",
+      "category": "multi",
+      "question": "结果中同时展示GPA班级排名、GPA专业排名这两项。",
+      "expected": [
+        "GPA班级排名",
+        "GPA专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M08-3",
+      "group": "M08",
+      "split": "validation",
+      "category": "multi",
+      "question": "先查GPA班级排名，另外再查GPA专业排名。",
+      "expected": [
+        "GPA班级排名",
+        "GPA专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M08-4",
+      "group": "M08",
+      "split": "validation",
+      "category": "multi",
+      "question": "需要两列结果：GPA班级排名以及GPA专业排名。",
+      "expected": [
+        "GPA班级排名",
+        "GPA专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M09-1",
+      "group": "M09",
+      "split": "validation",
+      "category": "multi",
+      "question": "请分别查询课程属性和修读方式。",
+      "expected": [
+        "课程属性",
+        "修读方式"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M09-2",
+      "group": "M09",
+      "split": "validation",
+      "category": "multi",
+      "question": "结果中同时展示课程属性、修读方式这两项。",
+      "expected": [
+        "课程属性",
+        "修读方式"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M09-3",
+      "group": "M09",
+      "split": "validation",
+      "category": "multi",
+      "question": "先查课程属性，另外再查修读方式。",
+      "expected": [
+        "课程属性",
+        "修读方式"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M09-4",
+      "group": "M09",
+      "split": "validation",
+      "category": "multi",
+      "question": "需要两列结果：课程属性以及修读方式。",
+      "expected": [
+        "课程属性",
+        "修读方式"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M10-1",
+      "group": "M10",
+      "split": "test",
+      "category": "multi",
+      "question": "请分别查询加权班级排名和加权专业排名。",
+      "expected": [
+        "加权班级排名",
+        "加权专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M10-2",
+      "group": "M10",
+      "split": "test",
+      "category": "multi",
+      "question": "结果中同时展示加权班级排名、加权专业排名这两项。",
+      "expected": [
+        "加权班级排名",
+        "加权专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M10-3",
+      "group": "M10",
+      "split": "test",
+      "category": "multi",
+      "question": "先查加权班级排名，另外再查加权专业排名。",
+      "expected": [
+        "加权班级排名",
+        "加权专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M10-4",
+      "group": "M10",
+      "split": "test",
+      "category": "multi",
+      "question": "需要两列结果：加权班级排名以及加权专业排名。",
+      "expected": [
+        "加权班级排名",
+        "加权专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M11-1",
+      "group": "M11",
+      "split": "test",
+      "category": "multi",
+      "question": "请分别查询平均成绩班级排名和平均成绩专业排名。",
+      "expected": [
+        "平均成绩班级排名",
+        "平均成绩专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M11-2",
+      "group": "M11",
+      "split": "test",
+      "category": "multi",
+      "question": "结果中同时展示平均成绩班级排名、平均成绩专业排名这两项。",
+      "expected": [
+        "平均成绩班级排名",
+        "平均成绩专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M11-3",
+      "group": "M11",
+      "split": "test",
+      "category": "multi",
+      "question": "先查平均成绩班级排名，另外再查平均成绩专业排名。",
+      "expected": [
+        "平均成绩班级排名",
+        "平均成绩专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M11-4",
+      "group": "M11",
+      "split": "test",
+      "category": "multi",
+      "question": "需要两列结果：平均成绩班级排名以及平均成绩专业排名。",
+      "expected": [
+        "平均成绩班级排名",
+        "平均成绩专业排名"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M12-1",
+      "group": "M12",
+      "split": "test",
+      "category": "multi",
+      "question": "请分别查询有效成绩人数和通过人数。",
+      "expected": [
+        "有效成绩人数",
+        "通过人数"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M12-2",
+      "group": "M12",
+      "split": "test",
+      "category": "multi",
+      "question": "结果中同时展示有效成绩人数、通过人数这两项。",
+      "expected": [
+        "有效成绩人数",
+        "通过人数"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M12-3",
+      "group": "M12",
+      "split": "test",
+      "category": "multi",
+      "question": "先查有效成绩人数，另外再查通过人数。",
+      "expected": [
+        "有效成绩人数",
+        "通过人数"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "M12-4",
+      "group": "M12",
+      "split": "test",
+      "category": "multi",
+      "question": "需要两列结果：有效成绩人数以及通过人数。",
+      "expected": [
+        "有效成绩人数",
+        "通过人数"
+      ],
+      "rationale": "仅标注明确请求的最具体业务术语；解释已完整包含的组成指标不自动重复标注。"
+    },
+    {
+      "id": "N01-1",
+      "group": "N01",
+      "split": "dev",
+      "category": "negative",
+      "question": "图书馆今天几点关门？",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N01-2",
+      "group": "N01",
+      "split": "dev",
+      "category": "negative",
+      "question": "查询今晚图书馆闭馆时刻。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N01-3",
+      "group": "N01",
+      "split": "dev",
+      "category": "negative",
+      "question": "图书馆今天开放到什么时候？",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N01-4",
+      "group": "N01",
+      "split": "dev",
+      "category": "negative",
+      "question": "今晚还能在图书馆待到几点？",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N02-1",
+      "group": "N02",
+      "split": "dev",
+      "category": "negative",
+      "question": "食堂今天有什么菜？",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N02-2",
+      "group": "N02",
+      "split": "dev",
+      "category": "negative",
+      "question": "查今天食堂菜单。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N02-3",
+      "group": "N02",
+      "split": "dev",
+      "category": "negative",
+      "question": "今晚食堂供应哪些饭菜？",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N02-4",
+      "group": "N02",
+      "split": "dev",
+      "category": "negative",
+      "question": "食堂午餐卖什么？",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N03-1",
+      "group": "N03",
+      "split": "dev",
+      "category": "negative",
+      "question": "查下周高数教室安排。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N03-2",
+      "group": "N03",
+      "split": "dev",
+      "category": "negative",
+      "question": "下周高数在哪个教室上？",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N03-3",
+      "group": "N03",
+      "split": "dev",
+      "category": "negative",
+      "question": "高数下周安排在哪栋楼？",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N03-4",
+      "group": "N03",
+      "split": "dev",
+      "category": "negative",
+      "question": "列出下周高数的上课地点。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N04-1",
+      "group": "N04",
+      "split": "dev",
+      "category": "negative",
+      "question": "查学生宿舍房间号。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N04-2",
+      "group": "N04",
+      "split": "dev",
+      "category": "negative",
+      "question": "学生住在哪个寝室？",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N04-3",
+      "group": "N04",
+      "split": "dev",
+      "category": "negative",
+      "question": "列出学生分配的住宿房间。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N04-4",
+      "group": "N04",
+      "split": "dev",
+      "category": "negative",
+      "question": "查询学生宿舍床位安排。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N05-1",
+      "group": "N05",
+      "split": "dev",
+      "category": "negative",
+      "question": "查询课程任课教师姓名。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N05-2",
+      "group": "N05",
+      "split": "dev",
+      "category": "negative",
+      "question": "谁负责教这门课？",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N05-3",
+      "group": "N05",
+      "split": "dev",
+      "category": "negative",
+      "question": "列出这门课的授课老师。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N05-4",
+      "group": "N05",
+      "split": "dev",
+      "category": "negative",
+      "question": "本门课程由哪位老师讲授？",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N06-1",
+      "group": "N06",
+      "split": "dev",
+      "category": "negative",
+      "question": "查询学生借书记录。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N06-2",
+      "group": "N06",
+      "split": "dev",
+      "category": "negative",
+      "question": "学生借了哪些图书？",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N06-3",
+      "group": "N06",
+      "split": "dev",
+      "category": "negative",
+      "question": "列出学生尚未归还的书籍。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N06-4",
+      "group": "N06",
+      "split": "dev",
+      "category": "negative",
+      "question": "查询学生图书借阅清单。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N07-1",
+      "group": "N07",
+      "split": "validation",
+      "category": "negative",
+      "question": "查学生本月考勤迟到次数。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N07-2",
+      "group": "N07",
+      "split": "validation",
+      "category": "negative",
+      "question": "统计学生这个月上课迟到了几次。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N07-3",
+      "group": "N07",
+      "split": "validation",
+      "category": "negative",
+      "question": "本月课堂迟到记录有多少条？",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N07-4",
+      "group": "N07",
+      "split": "validation",
+      "category": "negative",
+      "question": "查询本月学生迟到情况。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N08-1",
+      "group": "N08",
+      "split": "validation",
+      "category": "negative",
+      "question": "查询本学期学费缴纳情况。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N08-2",
+      "group": "N08",
+      "split": "validation",
+      "category": "negative",
+      "question": "学生本学期是否缴清学费？",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N08-3",
+      "group": "N08",
+      "split": "validation",
+      "category": "negative",
+      "question": "查本学期学费欠费金额。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N08-4",
+      "group": "N08",
+      "split": "validation",
+      "category": "negative",
+      "question": "列出本学期学费付款记录。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N09-1",
+      "group": "N09",
+      "split": "validation",
+      "category": "negative",
+      "question": "查询校园巴士发车时间。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N09-2",
+      "group": "N09",
+      "split": "validation",
+      "category": "negative",
+      "question": "校车几点发车？",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N09-3",
+      "group": "N09",
+      "split": "validation",
+      "category": "negative",
+      "question": "查看校园接驳车时刻表。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N09-4",
+      "group": "N09",
+      "split": "validation",
+      "category": "negative",
+      "question": "下一班校车什么时候出发？",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N10-1",
+      "group": "N10",
+      "split": "test",
+      "category": "negative",
+      "question": "查询课程退选截止日期。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N10-2",
+      "group": "N10",
+      "split": "test",
+      "category": "negative",
+      "question": "这门课最晚何时可以退选？",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N10-3",
+      "group": "N10",
+      "split": "test",
+      "category": "negative",
+      "question": "课程退选申请什么时候截止？",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N10-4",
+      "group": "N10",
+      "split": "test",
+      "category": "negative",
+      "question": "查看本学期退课办理截止日。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N11-1",
+      "group": "N11",
+      "split": "test",
+      "category": "negative",
+      "question": "查询教师办公室位置。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N11-2",
+      "group": "N11",
+      "split": "test",
+      "category": "negative",
+      "question": "这位老师在哪间办公室？",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N11-3",
+      "group": "N11",
+      "split": "test",
+      "category": "negative",
+      "question": "列出教师办公楼和房间号。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N11-4",
+      "group": "N11",
+      "split": "test",
+      "category": "negative",
+      "question": "老师的办公地点在哪里？",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N12-1",
+      "group": "N12",
+      "split": "test",
+      "category": "negative",
+      "question": "查询学生校园卡余额。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N12-2",
+      "group": "N12",
+      "split": "test",
+      "category": "negative",
+      "question": "学生饭卡还剩多少钱？",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N12-3",
+      "group": "N12",
+      "split": "test",
+      "category": "negative",
+      "question": "查看校园卡剩余金额。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    },
+    {
+      "id": "N12-4",
+      "group": "N12",
+      "split": "test",
+      "category": "negative",
+      "question": "查询校园卡账户可用余额。",
+      "expected": [],
+      "rationale": "该请求无需当前26项术语定义；即使属于校园场景，也不应强行关联成绩术语。"
+    }
+  ]
+}

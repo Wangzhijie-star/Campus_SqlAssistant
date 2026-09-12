@@ -1,0 +1,63 @@
+
+
+from typing import Optional
+from fastapi import FastAPI, Request
+from sqlmodel import Session, select
+from starlette.middleware.cors import CORSMiddleware
+from apps.system.schemas.system_schema import AssistantBase
+from common.core.config import settings
+from apps.system.models.system_model import AssistantModel
+from common.utils.time import get_timestamp
+from common.utils.utils import get_domain_list
+from common.core.response_middleware import ResponseMiddleware
+
+
+def _update_cors_middleware_instance(app: FastAPI, updated_origins: list[str]):
+    """遍历 middleware 栈，找到 CORSMiddleware 实例并更新其 allow_origins。"""
+    stack = getattr(app, 'middleware_stack', None)
+    while stack is not None and hasattr(stack, 'app'):
+        if isinstance(stack, CORSMiddleware):
+            stack.allow_origins = updated_origins
+            return
+        stack = stack.app
+
+
+
+def dynamic_upgrade_cors(request: Request, session: Session):
+    list_result = session.exec(select(AssistantModel).order_by(AssistantModel.create_time)).all()
+    seen = set()
+    unique_domains = []
+    for item in list_result:
+        if item.domain:
+            for domain in get_domain_list(item.domain):
+                domain = domain.strip()
+                if domain and domain not in seen:
+                    seen.add(domain)
+                    unique_domains.append(domain)
+    app: FastAPI = request.app
+    cors_middleware = None
+    response_middleware = None
+    for middleware in app.user_middleware:
+        if not cors_middleware and middleware.cls == CORSMiddleware:
+            cors_middleware = middleware
+        if not response_middleware and middleware.cls == ResponseMiddleware:
+            response_middleware = middleware
+        if cors_middleware and response_middleware:
+            break
+        
+    updated_origins = list(set(settings.all_cors_origins + unique_domains))
+    if cors_middleware:
+        cors_middleware.kwargs['allow_origins'] = updated_origins
+        _update_cors_middleware_instance(app, updated_origins)
+    if response_middleware:
+        for instance in ResponseMiddleware.instances:
+            instance.update_allow_origins(updated_origins)
+
+async def save(request: Request, session: Session, creator: AssistantBase, oid: Optional[int] = 1):
+    db_model = AssistantModel.model_validate(creator)
+    db_model.create_time = get_timestamp()
+    db_model.oid = oid
+    session.add(db_model)
+    session.commit()
+    dynamic_upgrade_cors(request=request, session=session)
+    return db_model

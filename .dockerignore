@@ -1,0 +1,12 @@
+# Python
+backend/__pycache__
+backend/app.egg-info
+backend/*.pyc
+backend/.mypy_cache
+backend/.coverage
+backend/htmlcov
+backend/.venv
+backend/.gitignore
+backend/README.md
+backend/scripts
+backend/.DS_Store

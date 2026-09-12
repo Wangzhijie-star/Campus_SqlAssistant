@@ -1,0 +1,18 @@
+{
+  "backend/apps/terminology/embedding_validation.py": {
+    "before": null,
+    "after": "eeb688e3771e71ec05c1222f50d692e0165d785dbcd6f8da94b875c2cad20c47"
+  },
+  "backend/apps/terminology/curd/terminology.py": {
+    "before": "cb491a5ce7cc3b2d5397791485cd57de29382b408002306c1aab6f0263388788",
+    "after": "efd20f8060764ea68402155bb37e070244f778cc5db85056522e017b9ac2ed2d"
+  },
+  "backend/apps/terminology/models/terminology_model.py": {
+    "before": "9999d4d50dfca9b37721fa2f20e15ebe76abadf69347a3918787977e3eb7e013",
+    "after": "d7f42a0ae8b10a7a664073fdd92bed814376e88bd7c580244b11b463a5baaa40"
+  },
+  "backend/apps/terminology/api/terminology.py": {
+    "before": "38f7f0d6ee46080f92bda2a94747c595c5a6576fd81c626e33a038017dd2dd05",
+    "after": "b920dbc99d04bdd4d42ef403b1eb35912c5c28997ca9516464c511491637bee5"
+  }
+}

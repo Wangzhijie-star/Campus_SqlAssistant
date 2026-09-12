@@ -1,0 +1,58 @@
+FROM python:3.11-slim-bookworm AS python-builder
+FROM registry.cn-qingdao.aliyuncs.com/dataease/postgres:17.6
+
+# python environment
+COPY --from=python-builder /usr/local /usr/local
+
+RUN python --version && pip --version
+
+# Install uv tool
+COPY --from=ghcr.io/astral-sh/uv:0.7.8 /uv /uvx /bin/
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wait-for-it \
+    build-essential \
+    curl \
+    gnupg \
+    gcc \
+    g++ \
+    libcairo2-dev \
+    libpango1.0-dev \
+    libjpeg-dev \
+    libgif-dev \
+    librsvg2-dev \
+    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && curl -qL https://www.npmjs.com/install.sh | sh - \
+    && apt-get install -y nodejs \
+    && curl -L --connect-timeout 60 -m 1800 https://fit2cloud-support.oss-cn-beijing.aliyuncs.com/xpack-license/get-validator-linux | sh \
+    && rm -rf /var/lib/apt/lists/* \
+    && chmod g+xr /usr/bin/ld.so \
+    && chmod g+x /usr/local/bin/python*
+
+# Download Oracle instant client
+ENV DB_CLIENT=/opt/sqlbot/db_client
+ENV LD_LIBRARY_PATH="${DB_CLIENT}/oracle_instant_client:${LD_LIBRARY_PATH}"
+ARG TARGETARCH
+RUN apt-get update && \
+    apt-get install -y unzip libaio1 && \
+    mkdir -p ${DB_CLIENT} && \
+    if [ "$TARGETARCH" = "amd64" ]; then \
+      echo "Building for x86_64"; \
+      curl -L -o app.zip https://download.oracle.com/otn_software/linux/instantclient/2326000/instantclient-basic-linux.x64-23.26.0.0.0.zip; \
+    elif [ "$TARGETARCH" = "arm64" ]; then \
+      echo "Building for ARM64"; \
+      curl -L -o app.zip https://download.oracle.com/otn_software/linux/instantclient/2390000/instantclient-basic-linux.arm64-23.9.0.25.07.zip; \
+    fi && \
+    unzip app.zip -d ${DB_CLIENT} && \
+    rm app.zip && \
+    rm -rf /var/lib/apt/lists/* && \
+    mv ${DB_CLIENT}/instantclient* ${DB_CLIENT}/oracle_instant_client
+
+# Download DM library
+ENV DM_HOME=/opt/dmdbms
+ENV LD_LIBRARY_PATH=$DM_HOME/bin:$LD_LIBRARY_PATH
+RUN curl -L -o dm.zip https://resource-fit2cloud-com.oss-cn-hangzhou.aliyuncs.com/sqlbot/dm/$TARGETARCH.zip && \
+    mkdir -p $DM_HOME/bin && \
+    unzip dm.zip -d $DM_HOME/bin && \
+    chmod -R +x $DM_HOME/bin && \
+    rm -rf dm.zip

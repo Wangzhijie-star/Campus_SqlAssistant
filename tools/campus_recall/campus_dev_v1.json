@@ -1,0 +1,1314 @@
+{
+  "version": "campus-dev-v1",
+  "status": "synthetic_draft_for_review",
+  "annotation_policy": "最小目标术语集合。每条定义自包含，不自动标注子串、上位词或计算依赖；否定提及不等于目标。",
+  "limitations": "120题全部为人工设计的合成开发题，direct/alias含统一模板；不是真实流量或独立测试集。不得用这些题证明泛化性能。",
+  "snapshot": "campus-terms-20260910-100000.json",
+  "cases": [
+    {
+      "id": "D001",
+      "group": "term-1",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“曾不及格”。",
+      "expected": [
+        "曾不及格"
+      ],
+      "rationale": "目标为曾不及格。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D002",
+      "group": "term-1",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“历史挂科”这一项。",
+      "expected": [
+        "曾不及格"
+      ],
+      "rationale": "目标为曾不及格。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D003",
+      "group": "term-1",
+      "split": "dev",
+      "category": "semantic",
+      "question": "查历史上有课程没考过的记录，后来通过的也包括。",
+      "expected": [
+        "曾不及格"
+      ],
+      "rationale": "目标为曾不及格。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D004",
+      "group": "term-5",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“尚不及格”。",
+      "expected": [
+        "尚不及格"
+      ],
+      "rationale": "目标为尚不及格。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D005",
+      "group": "term-5",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“当前仍然挂科状态”这一项。",
+      "expected": [
+        "尚不及格"
+      ],
+      "rationale": "目标为尚不及格。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D006",
+      "group": "term-5",
+      "split": "dev",
+      "category": "semantic",
+      "question": "哪些课程到报表统计时还没有通过？后来已经通过的排除。",
+      "expected": [
+        "尚不及格"
+      ],
+      "rationale": "目标为尚不及格。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D007",
+      "group": "term-16",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“通过率”。",
+      "expected": [
+        "通过率"
+      ],
+      "rationale": "目标为通过率。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D008",
+      "group": "term-16",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“合格率”这一项。",
+      "expected": [
+        "通过率"
+      ],
+      "rationale": "目标为通过率。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D009",
+      "group": "term-16",
+      "split": "dev",
+      "category": "semantic",
+      "question": "2404班高数有分数的人中，达到60分的学生占百分之多少？零分和空白不计入。",
+      "expected": [
+        "通过率"
+      ],
+      "rationale": "目标为通过率。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D010",
+      "group": "term-18",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“总成绩”。",
+      "expected": [
+        "总成绩"
+      ],
+      "rationale": "目标为总成绩。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D011",
+      "group": "term-18",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“课程总成绩”这一项。",
+      "expected": [
+        "总成绩"
+      ],
+      "rationale": "目标为总成绩。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D012",
+      "group": "term-18",
+      "split": "dev",
+      "category": "semantic",
+      "question": "请列出成绩明细中每位学生高数这门课最终记载的分数，不要把各科分数相加。",
+      "expected": [
+        "总成绩"
+      ],
+      "rationale": "目标为总成绩。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D013",
+      "group": "term-20",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“平均成绩”。",
+      "expected": [
+        "平均成绩"
+      ],
+      "rationale": "目标为平均成绩。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D014",
+      "group": "term-20",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“平均分”这一项。",
+      "expected": [
+        "平均成绩"
+      ],
+      "rationale": "目标为平均成绩。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D015",
+      "group": "term-20",
+      "split": "dev",
+      "category": "semantic",
+      "question": "读取学生排名报表中每人各科的普通平均分值，不按课程权重另算。",
+      "expected": [
+        "平均成绩"
+      ],
+      "rationale": "目标为平均成绩。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D016",
+      "group": "term-22",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“加权学分成绩”。",
+      "expected": [
+        "加权学分成绩"
+      ],
+      "rationale": "目标为加权学分成绩。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D017",
+      "group": "term-22",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“加权成绩”这一项。",
+      "expected": [
+        "加权学分成绩"
+      ],
+      "rationale": "目标为加权学分成绩。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D018",
+      "group": "term-22",
+      "split": "dev",
+      "category": "semantic",
+      "question": "我想看排名报表中考虑课程学分权重的那个成绩数值，直接读现成值。",
+      "expected": [
+        "加权学分成绩"
+      ],
+      "rationale": "目标为加权学分成绩。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D019",
+      "group": "term-24",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“GPA”。",
+      "expected": [
+        "GPA"
+      ],
+      "rationale": "目标为GPA。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D020",
+      "group": "term-24",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“平均学分绩点”这一项。",
+      "expected": [
+        "GPA"
+      ],
+      "rationale": "目标为GPA。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D021",
+      "group": "term-24",
+      "split": "dev",
+      "category": "semantic",
+      "question": "查看学生排名报表中以绩点表示的成绩数值，直接读取已有值。",
+      "expected": [
+        "GPA"
+      ],
+      "rationale": "目标为GPA。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D022",
+      "group": "term-26",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“要求总学分”。",
+      "expected": [
+        "要求总学分"
+      ],
+      "rationale": "目标为要求总学分。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D023",
+      "group": "term-26",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“要求学分”这一项。",
+      "expected": [
+        "要求总学分"
+      ],
+      "rationale": "目标为要求总学分。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D024",
+      "group": "term-26",
+      "split": "dev",
+      "category": "semantic",
+      "question": "排名报表规定每位学生应达到的学分总额是多少？",
+      "expected": [
+        "要求总学分"
+      ],
+      "rationale": "目标为要求总学分。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D025",
+      "group": "term-28",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“已修课程学分”。",
+      "expected": [
+        "已修课程学分"
+      ],
+      "rationale": "目标为已修课程学分。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D026",
+      "group": "term-28",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“已修学分”这一项。",
+      "expected": [
+        "已修课程学分"
+      ],
+      "rationale": "目标为已修课程学分。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D027",
+      "group": "term-28",
+      "split": "dev",
+      "category": "semantic",
+      "question": "排名报表记载每位学生已经修读课程累计的学分是多少？",
+      "expected": [
+        "已修课程学分"
+      ],
+      "rationale": "目标为已修课程学分。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D028",
+      "group": "term-30",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“已修自主实践学分”。",
+      "expected": [
+        "已修自主实践学分"
+      ],
+      "rationale": "目标为已修自主实践学分。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D029",
+      "group": "term-30",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“自主实践已修学分”这一项。",
+      "expected": [
+        "已修自主实践学分"
+      ],
+      "rationale": "目标为已修自主实践学分。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D030",
+      "group": "term-30",
+      "split": "dev",
+      "category": "semantic",
+      "question": "学生已经修读的自主实践部分累计拿到多少学分？读取排名报表。",
+      "expected": [
+        "已修自主实践学分"
+      ],
+      "rationale": "目标为已修自主实践学分。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D031",
+      "group": "term-32",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“曾不及格学分”。",
+      "expected": [
+        "曾不及格学分"
+      ],
+      "rationale": "目标为曾不及格学分。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D032",
+      "group": "term-32",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“历史不及格学分”这一项。",
+      "expected": [
+        "曾不及格学分"
+      ],
+      "rationale": "目标为曾不及格学分。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D033",
+      "group": "term-32",
+      "split": "dev",
+      "category": "semantic",
+      "question": "读取排名报表中历史上没通过的课程对应的学分数，不仅看目前未通过的。",
+      "expected": [
+        "曾不及格学分"
+      ],
+      "rationale": "目标为曾不及格学分。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D034",
+      "group": "term-34",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“尚不及格学分”。",
+      "expected": [
+        "尚不及格学分"
+      ],
+      "rationale": "目标为尚不及格学分。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D035",
+      "group": "term-34",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“当前未通过学分”这一项。",
+      "expected": [
+        "尚不及格学分"
+      ],
+      "rationale": "目标为尚不及格学分。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D036",
+      "group": "term-34",
+      "split": "dev",
+      "category": "semantic",
+      "question": "读取排名报表中截至统计时仍没通过的课程所对应的学分数。",
+      "expected": [
+        "尚不及格学分"
+      ],
+      "rationale": "目标为尚不及格学分。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D037",
+      "group": "term-36",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“学分”。",
+      "expected": [
+        "学分"
+      ],
+      "rationale": "目标为学分。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D038",
+      "group": "term-36",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“课程学分”这一项。",
+      "expected": [
+        "学分"
+      ],
+      "rationale": "目标为学分。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D039",
+      "group": "term-36",
+      "split": "dev",
+      "category": "semantic",
+      "question": "高数这门课程本身值多少学分？不问学生修读的累计总额。",
+      "expected": [
+        "学分"
+      ],
+      "rationale": "目标为学分。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D040",
+      "group": "term-38",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“修读方式”。",
+      "expected": [
+        "修读方式"
+      ],
+      "rationale": "目标为修读方式。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D041",
+      "group": "term-38",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“修读类型”这一项。",
+      "expected": [
+        "修读方式"
+      ],
+      "rationale": "目标为修读方式。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D042",
+      "group": "term-38",
+      "split": "dev",
+      "category": "semantic",
+      "question": "成绩明细里学生以何种方式修读这门课程？读取对应分类字段。",
+      "expected": [
+        "修读方式"
+      ],
+      "rationale": "目标为修读方式。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D043",
+      "group": "term-40",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“课程属性”。",
+      "expected": [
+        "课程属性"
+      ],
+      "rationale": "目标为课程属性。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D044",
+      "group": "term-40",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“课程性质”这一项。",
+      "expected": [
+        "课程属性"
+      ],
+      "rationale": "目标为课程属性。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D045",
+      "group": "term-40",
+      "split": "dev",
+      "category": "semantic",
+      "question": "成绩明细把这门课程归为什么性质类别？",
+      "expected": [
+        "课程属性"
+      ],
+      "rationale": "目标为课程属性。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D046",
+      "group": "term-42",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“考试时间”。",
+      "expected": [
+        "考试时间"
+      ],
+      "rationale": "目标为考试时间。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D047",
+      "group": "term-42",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“考试日期”这一项。",
+      "expected": [
+        "考试时间"
+      ],
+      "rationale": "目标为考试时间。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D048",
+      "group": "term-42",
+      "split": "dev",
+      "category": "semantic",
+      "question": "成绩明细中的这场考试是在什么日期进行的？",
+      "expected": [
+        "考试时间"
+      ],
+      "rationale": "目标为考试时间。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D049",
+      "group": "term-44",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“学年学期”。",
+      "expected": [
+        "学年学期"
+      ],
+      "rationale": "目标为学年学期。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D050",
+      "group": "term-44",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“开课学期”这一项。",
+      "expected": [
+        "学年学期"
+      ],
+      "rationale": "目标为学年学期。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D051",
+      "group": "term-44",
+      "split": "dev",
+      "category": "semantic",
+      "question": "历史未通过课程报表中的记录属于哪个学年和学期？只列时间标识。",
+      "expected": [
+        "学年学期"
+      ],
+      "rationale": "目标为学年学期。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D052",
+      "group": "term-46",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“不及格次数”。",
+      "expected": [
+        "不及格次数"
+      ],
+      "rationale": "目标为不及格次数。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D053",
+      "group": "term-46",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“未通过次数”这一项。",
+      "expected": [
+        "不及格次数"
+      ],
+      "rationale": "目标为不及格次数。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D054",
+      "group": "term-46",
+      "split": "dev",
+      "category": "semantic",
+      "question": "报表记载这名学生这门课累计没考过几次？不是问几门课。",
+      "expected": [
+        "不及格次数"
+      ],
+      "rationale": "目标为不及格次数。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D055",
+      "group": "term-48",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“GPA班级排名”。",
+      "expected": [
+        "GPA班级排名"
+      ],
+      "rationale": "目标为GPA班级排名。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D056",
+      "group": "term-48",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“班级绩点排名”这一项。",
+      "expected": [
+        "GPA班级排名"
+      ],
+      "rationale": "目标为GPA班级排名。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D057",
+      "group": "term-48",
+      "split": "dev",
+      "category": "semantic",
+      "question": "直接读取报表中学生按绩点在本班排第几名。",
+      "expected": [
+        "GPA班级排名"
+      ],
+      "rationale": "目标为GPA班级排名。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D058",
+      "group": "term-50",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“GPA专业排名”。",
+      "expected": [
+        "GPA专业排名"
+      ],
+      "rationale": "目标为GPA专业排名。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D059",
+      "group": "term-50",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“专业绩点排名”这一项。",
+      "expected": [
+        "GPA专业排名"
+      ],
+      "rationale": "目标为GPA专业排名。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D060",
+      "group": "term-50",
+      "split": "dev",
+      "category": "semantic",
+      "question": "直接读取报表中学生按绩点在整个专业排第几名。",
+      "expected": [
+        "GPA专业排名"
+      ],
+      "rationale": "目标为GPA专业排名。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D061",
+      "group": "term-52",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“加权班级排名”。",
+      "expected": [
+        "加权班级排名"
+      ],
+      "rationale": "目标为加权班级排名。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D062",
+      "group": "term-52",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“班级加权排名”这一项。",
+      "expected": [
+        "加权班级排名"
+      ],
+      "rationale": "目标为加权班级排名。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D063",
+      "group": "term-52",
+      "split": "dev",
+      "category": "semantic",
+      "question": "按学分加权成绩衡量，学生在班里的现成名次是多少？",
+      "expected": [
+        "加权班级排名"
+      ],
+      "rationale": "目标为加权班级排名。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D064",
+      "group": "term-54",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“加权专业排名”。",
+      "expected": [
+        "加权专业排名"
+      ],
+      "rationale": "目标为加权专业排名。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D065",
+      "group": "term-54",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“专业加权排名”这一项。",
+      "expected": [
+        "加权专业排名"
+      ],
+      "rationale": "目标为加权专业排名。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D066",
+      "group": "term-54",
+      "split": "dev",
+      "category": "semantic",
+      "question": "按学分加权成绩衡量，学生在专业里的现成名次是多少？",
+      "expected": [
+        "加权专业排名"
+      ],
+      "rationale": "目标为加权专业排名。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D067",
+      "group": "term-56",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“平均成绩班级排名”。",
+      "expected": [
+        "平均成绩班级排名"
+      ],
+      "rationale": "目标为平均成绩班级排名。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D068",
+      "group": "term-56",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“班级平均分排名”这一项。",
+      "expected": [
+        "平均成绩班级排名"
+      ],
+      "rationale": "目标为平均成绩班级排名。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D069",
+      "group": "term-56",
+      "split": "dev",
+      "category": "semantic",
+      "question": "按普通平均分衡量，学生在本班的报表现成名次是多少？",
+      "expected": [
+        "平均成绩班级排名"
+      ],
+      "rationale": "目标为平均成绩班级排名。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D070",
+      "group": "term-58",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“平均成绩专业排名”。",
+      "expected": [
+        "平均成绩专业排名"
+      ],
+      "rationale": "目标为平均成绩专业排名。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D071",
+      "group": "term-58",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“专业平均分排名”这一项。",
+      "expected": [
+        "平均成绩专业排名"
+      ],
+      "rationale": "目标为平均成绩专业排名。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D072",
+      "group": "term-58",
+      "split": "dev",
+      "category": "semantic",
+      "question": "按普通平均分衡量，学生在整个专业的报表现成名次是多少？",
+      "expected": [
+        "平均成绩专业排名"
+      ],
+      "rationale": "目标为平均成绩专业排名。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D073",
+      "group": "term-60",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“有效成绩人数”。",
+      "expected": [
+        "有效成绩人数"
+      ],
+      "rationale": "目标为有效成绩人数。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D074",
+      "group": "term-60",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“有效成绩学生数”这一项。",
+      "expected": [
+        "有效成绩人数"
+      ],
+      "rationale": "目标为有效成绩人数。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D075",
+      "group": "term-60",
+      "split": "dev",
+      "category": "semantic",
+      "question": "2404班高数剔除零分和空成绩后，还有多少名学生有可统计的成绩？",
+      "expected": [
+        "有效成绩人数"
+      ],
+      "rationale": "目标为有效成绩人数。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D076",
+      "group": "term-62",
+      "split": "dev",
+      "category": "direct",
+      "question": "请查询报表中的“通过人数”。",
+      "expected": [
+        "通过人数"
+      ],
+      "rationale": "目标为通过人数。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D077",
+      "group": "term-62",
+      "split": "dev",
+      "category": "alias",
+      "question": "请查询“合格人数”这一项。",
+      "expected": [
+        "通过人数"
+      ],
+      "rationale": "目标为通过人数。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D078",
+      "group": "term-62",
+      "split": "dev",
+      "category": "semantic",
+      "question": "2404班高数考到60分及以上的学生一共多少人？按学号去重。",
+      "expected": [
+        "通过人数"
+      ],
+      "rationale": "目标为通过人数。定义已自包含；名称中的短词或用于解释的相近指标不自动作为额外目标。"
+    },
+    {
+      "id": "D079",
+      "group": "multi-0",
+      "split": "dev",
+      "category": "multi",
+      "question": "分别列出历史上没考过的课程（后来通过的也算），以及当前仍没通过的课程。",
+      "expected": [
+        "曾不及格",
+        "尚不及格"
+      ],
+      "rationale": "题目明确要求多个指标或分组条件，分别标注主术语，不将其子串自动计入。"
+    },
+    {
+      "id": "D080",
+      "group": "multi-1",
+      "split": "dev",
+      "category": "multi",
+      "question": "列出曾不及格学分和尚不及格学分两个字段。",
+      "expected": [
+        "曾不及格学分",
+        "尚不及格学分"
+      ],
+      "rationale": "题目明确要求多个指标或分组条件，分别标注主术语，不将其子串自动计入。"
+    },
+    {
+      "id": "D081",
+      "group": "multi-2",
+      "split": "dev",
+      "category": "multi",
+      "question": "对比排名报表中的平均成绩和加权学分成绩。",
+      "expected": [
+        "平均成绩",
+        "加权学分成绩"
+      ],
+      "rationale": "题目明确要求多个指标或分组条件，分别标注主术语，不将其子串自动计入。"
+    },
+    {
+      "id": "D082",
+      "group": "multi-3",
+      "split": "dev",
+      "category": "multi",
+      "question": "查看GPA数值和对应的GPA班级排名。",
+      "expected": [
+        "GPA",
+        "GPA班级排名"
+      ],
+      "rationale": "题目明确要求多个指标或分组条件，分别标注主术语，不将其子串自动计入。"
+    },
+    {
+      "id": "D083",
+      "group": "multi-4",
+      "split": "dev",
+      "category": "multi",
+      "question": "同时列出GPA班级排名和GPA专业排名。",
+      "expected": [
+        "GPA班级排名",
+        "GPA专业排名"
+      ],
+      "rationale": "题目明确要求多个指标或分组条件，分别标注主术语，不将其子串自动计入。"
+    },
+    {
+      "id": "D084",
+      "group": "multi-5",
+      "split": "dev",
+      "category": "multi",
+      "question": "分别查看加权班级排名与加权专业排名。",
+      "expected": [
+        "加权班级排名",
+        "加权专业排名"
+      ],
+      "rationale": "题目明确要求多个指标或分组条件，分别标注主术语，不将其子串自动计入。"
+    },
+    {
+      "id": "D085",
+      "group": "multi-6",
+      "split": "dev",
+      "category": "multi",
+      "question": "对照平均成绩班级排名与平均成绩专业排名。",
+      "expected": [
+        "平均成绩班级排名",
+        "平均成绩专业排名"
+      ],
+      "rationale": "题目明确要求多个指标或分组条件，分别标注主术语，不将其子串自动计入。"
+    },
+    {
+      "id": "D086",
+      "group": "multi-7",
+      "split": "dev",
+      "category": "multi",
+      "question": "列出要求总学分和已修课程学分。",
+      "expected": [
+        "要求总学分",
+        "已修课程学分"
+      ],
+      "rationale": "题目明确要求多个指标或分组条件，分别标注主术语，不将其子串自动计入。"
+    },
+    {
+      "id": "D087",
+      "group": "multi-8",
+      "split": "dev",
+      "category": "multi",
+      "question": "分别读取已修课程学分和已修自主实践学分。",
+      "expected": [
+        "已修课程学分",
+        "已修自主实践学分"
+      ],
+      "rationale": "题目明确要求多个指标或分组条件，分别标注主术语，不将其子串自动计入。"
+    },
+    {
+      "id": "D088",
+      "group": "multi-9",
+      "split": "dev",
+      "category": "multi",
+      "question": "2404班高数的通过率和通过人数分别是多少？",
+      "expected": [
+        "通过率",
+        "通过人数"
+      ],
+      "rationale": "题目明确要求多个指标或分组条件，分别标注主术语，不将其子串自动计入。"
+    },
+    {
+      "id": "D089",
+      "group": "multi-10",
+      "split": "dev",
+      "category": "multi",
+      "question": "计算2404班高数通过率，并单独列出有效成绩人数。",
+      "expected": [
+        "通过率",
+        "有效成绩人数"
+      ],
+      "rationale": "题目明确要求多个指标或分组条件，分别标注主术语，不将其子串自动计入。"
+    },
+    {
+      "id": "D090",
+      "group": "multi-11",
+      "split": "dev",
+      "category": "multi",
+      "question": "2404班高数通过人数和有效成绩人数各是多少？",
+      "expected": [
+        "通过人数",
+        "有效成绩人数"
+      ],
+      "rationale": "题目明确要求多个指标或分组条件，分别标注主术语，不将其子串自动计入。"
+    },
+    {
+      "id": "D091",
+      "group": "multi-12",
+      "split": "dev",
+      "category": "multi",
+      "question": "成绩明细按课程属性和修读方式分组。",
+      "expected": [
+        "课程属性",
+        "修读方式"
+      ],
+      "rationale": "题目明确要求多个指标或分组条件，分别标注主术语，不将其子串自动计入。"
+    },
+    {
+      "id": "D092",
+      "group": "multi-13",
+      "split": "dev",
+      "category": "multi",
+      "question": "列出课程总成绩及对应考试时间。",
+      "expected": [
+        "总成绩",
+        "考试时间"
+      ],
+      "rationale": "题目明确要求多个指标或分组条件，分别标注主术语，不将其子串自动计入。"
+    },
+    {
+      "id": "D093",
+      "group": "multi-14",
+      "split": "dev",
+      "category": "multi",
+      "question": "列出每门课程的学分和课程属性。",
+      "expected": [
+        "学分",
+        "课程属性"
+      ],
+      "rationale": "题目明确要求多个指标或分组条件，分别标注主术语，不将其子串自动计入。"
+    },
+    {
+      "id": "D094",
+      "group": "multi-15",
+      "split": "dev",
+      "category": "multi",
+      "question": "历史不及格课程按学年学期分组展示。",
+      "expected": [
+        "曾不及格",
+        "学年学期"
+      ],
+      "rationale": "题目明确要求多个指标或分组条件，分别标注主术语，不将其子串自动计入。"
+    },
+    {
+      "id": "D095",
+      "group": "multi-16",
+      "split": "dev",
+      "category": "multi",
+      "question": "列出尚不及格课程，并显示每条记录的不及格次数。",
+      "expected": [
+        "尚不及格",
+        "不及格次数"
+      ],
+      "rationale": "题目明确要求多个指标或分组条件，分别标注主术语，不将其子串自动计入。"
+    },
+    {
+      "id": "D096",
+      "group": "multi-17",
+      "split": "dev",
+      "category": "multi",
+      "question": "列出GPA与平均成绩两个数值。",
+      "expected": [
+        "GPA",
+        "平均成绩"
+      ],
+      "rationale": "题目明确要求多个指标或分组条件，分别标注主术语，不将其子串自动计入。"
+    },
+    {
+      "id": "D097",
+      "group": "multi-18",
+      "split": "dev",
+      "category": "multi",
+      "question": "同时查看加权学分成绩与加权专业排名。",
+      "expected": [
+        "加权学分成绩",
+        "加权专业排名"
+      ],
+      "rationale": "题目明确要求多个指标或分组条件，分别标注主术语，不将其子串自动计入。"
+    },
+    {
+      "id": "D098",
+      "group": "multi-19",
+      "split": "dev",
+      "category": "multi",
+      "question": "分别列出课程属性、修读方式和考试时间。",
+      "expected": [
+        "课程属性",
+        "修读方式",
+        "考试时间"
+      ],
+      "rationale": "题目明确要求多个指标或分组条件，分别标注主术语，不将其子串自动计入。"
+    },
+    {
+      "id": "D099",
+      "group": "multi-20",
+      "split": "dev",
+      "category": "multi",
+      "question": "2404班高数的通过率、通过人数、有效成绩人数都列出来。",
+      "expected": [
+        "通过率",
+        "通过人数",
+        "有效成绩人数"
+      ],
+      "rationale": "题目明确要求多个指标或分组条件，分别标注主术语，不将其子串自动计入。"
+    },
+    {
+      "id": "D100",
+      "group": "multi-21",
+      "split": "dev",
+      "category": "multi",
+      "question": "同时读取要求总学分、已修课程学分、已修自主实践学分。",
+      "expected": [
+        "要求总学分",
+        "已修课程学分",
+        "已修自主实践学分"
+      ],
+      "rationale": "题目明确要求多个指标或分组条件，分别标注主术语，不将其子串自动计入。"
+    },
+    {
+      "id": "D101",
+      "group": "negative-0",
+      "split": "dev",
+      "category": "negative",
+      "question": "图书馆今天几点关门？",
+      "expected": [],
+      "rationale": "问题目标不在当前26个术语中；与课程或考试有关不代表需要成绩术语。"
+    },
+    {
+      "id": "D102",
+      "group": "negative-1",
+      "split": "dev",
+      "category": "negative",
+      "question": "食堂今天提供什么菜？",
+      "expected": [],
+      "rationale": "问题目标不在当前26个术语中；与课程或考试有关不代表需要成绩术语。"
+    },
+    {
+      "id": "D103",
+      "group": "negative-2",
+      "split": "dev",
+      "category": "negative",
+      "question": "宿舍维修应该联系谁？",
+      "expected": [],
+      "rationale": "问题目标不在当前26个术语中；与课程或考试有关不代表需要成绩术语。"
+    },
+    {
+      "id": "D104",
+      "group": "negative-3",
+      "split": "dev",
+      "category": "negative",
+      "question": "明天学校会下雨吗？",
+      "expected": [],
+      "rationale": "问题目标不在当前26个术语中；与课程或考试有关不代表需要成绩术语。"
+    },
+    {
+      "id": "D105",
+      "group": "negative-4",
+      "split": "dev",
+      "category": "negative",
+      "question": "校车周末几点发车？",
+      "expected": [],
+      "rationale": "问题目标不在当前26个术语中；与课程或考试有关不代表需要成绩术语。"
+    },
+    {
+      "id": "D106",
+      "group": "negative-5",
+      "split": "dev",
+      "category": "negative",
+      "question": "体育馆如何预约？",
+      "expected": [],
+      "rationale": "问题目标不在当前26个术语中；与课程或考试有关不代表需要成绩术语。"
+    },
+    {
+      "id": "D107",
+      "group": "negative-6",
+      "split": "dev",
+      "category": "negative",
+      "question": "校园网密码在哪里重置？",
+      "expected": [],
+      "rationale": "问题目标不在当前26个术语中；与课程或考试有关不代表需要成绩术语。"
+    },
+    {
+      "id": "D108",
+      "group": "negative-7",
+      "split": "dev",
+      "category": "negative",
+      "question": "医务室下午是否开放？",
+      "expected": [],
+      "rationale": "问题目标不在当前26个术语中；与课程或考试有关不代表需要成绩术语。"
+    },
+    {
+      "id": "D109",
+      "group": "negative-8",
+      "split": "dev",
+      "category": "negative",
+      "question": "学校收发快递的地址是什么？",
+      "expected": [],
+      "rationale": "问题目标不在当前26个术语中；与课程或考试有关不代表需要成绩术语。"
+    },
+    {
+      "id": "D110",
+      "group": "negative-9",
+      "split": "dev",
+      "category": "negative",
+      "question": "校园停车场还有空位吗？",
+      "expected": [],
+      "rationale": "问题目标不在当前26个术语中；与课程或考试有关不代表需要成绩术语。"
+    },
+    {
+      "id": "D111",
+      "group": "negative-10",
+      "split": "dev",
+      "category": "negative",
+      "question": "下学期高数在哪间教室上课？",
+      "expected": [],
+      "rationale": "问题目标不在当前26个术语中；与课程或考试有关不代表需要成绩术语。"
+    },
+    {
+      "id": "D112",
+      "group": "negative-11",
+      "split": "dev",
+      "category": "negative",
+      "question": "这门课程的任课老师是谁？",
+      "expected": [],
+      "rationale": "问题目标不在当前26个术语中；与课程或考试有关不代表需要成绩术语。"
+    },
+    {
+      "id": "D113",
+      "group": "negative-12",
+      "split": "dev",
+      "category": "negative",
+      "question": "高数使用哪一本教材？",
+      "expected": [],
+      "rationale": "问题目标不在当前26个术语中；与课程或考试有关不代表需要成绩术语。"
+    },
+    {
+      "id": "D114",
+      "group": "negative-13",
+      "split": "dev",
+      "category": "negative",
+      "question": "课程退选截止日期是什么时候？",
+      "expected": [],
+      "rationale": "问题目标不在当前26个术语中；与课程或考试有关不代表需要成绩术语。"
+    },
+    {
+      "id": "D115",
+      "group": "negative-14",
+      "split": "dev",
+      "category": "negative",
+      "question": "奖学金申请什么时候截止？",
+      "expected": [],
+      "rationale": "问题目标不在当前26个术语中；与课程或考试有关不代表需要成绩术语。"
+    },
+    {
+      "id": "D116",
+      "group": "negative-15",
+      "split": "dev",
+      "category": "negative",
+      "question": "学生证丢了在哪里补办？",
+      "expected": [],
+      "rationale": "问题目标不在当前26个术语中；与课程或考试有关不代表需要成绩术语。"
+    },
+    {
+      "id": "D117",
+      "group": "negative-16",
+      "split": "dev",
+      "category": "negative",
+      "question": "考试报名费是多少钱？",
+      "expected": [],
+      "rationale": "问题目标不在当前26个术语中；与课程或考试有关不代表需要成绩术语。"
+    },
+    {
+      "id": "D118",
+      "group": "negative-17",
+      "split": "dev",
+      "category": "negative",
+      "question": "英语考试在哪栋楼举行？",
+      "expected": [],
+      "rationale": "问题目标不在当前26个术语中；与课程或考试有关不代表需要成绩术语。"
+    },
+    {
+      "id": "D119",
+      "group": "negative-18",
+      "split": "dev",
+      "category": "negative",
+      "question": "课程作业在哪里提交？",
+      "expected": [],
+      "rationale": "问题目标不在当前26个术语中；与课程或考试有关不代表需要成绩术语。"
+    },
+    {
+      "id": "D120",
+      "group": "negative-19",
+      "split": "dev",
+      "category": "negative",
+      "question": "教务办公室今天几点下班？",
+      "expected": [],
+      "rationale": "问题目标不在当前26个术语中；与课程或考试有关不代表需要成绩术语。"
+    }
+  ]
+}

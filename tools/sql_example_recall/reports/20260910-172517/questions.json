@@ -1,0 +1,3263 @@
+{
+  "stage": "initial_development_baseline",
+  "label_status": "合成模板改写，严格指定示例ID标签，待业务复核；未保留独立验证/测试集，不能作为最终泛化结论",
+  "policy": "按请求的查询任务标注，数据恰巧同结果不构成等价；多意图要求分别覆盖两个示例。原问题自检不计入评分。",
+  "cases": [
+    {
+      "id": "P001",
+      "category": "single",
+      "question": "给我展示全部历史挂科记录，依照学生编号排列？",
+      "required_groups": [
+        [
+          "E001"
+        ]
+      ],
+      "family": "history-detail"
+    },
+    {
+      "id": "P002",
+      "category": "single",
+      "question": "历史挂科记录一共有几条数据？",
+      "required_groups": [
+        [
+          "E002"
+        ]
+      ],
+      "family": "history-rows"
+    },
+    {
+      "id": "P003",
+      "category": "single",
+      "question": "历史挂科记录去重后有几位学生？",
+      "required_groups": [
+        [
+          "E003"
+        ]
+      ],
+      "family": "history-students"
+    },
+    {
+      "id": "P004",
+      "category": "single",
+      "question": "帮我找出历史挂科记录中出现的学生学号？",
+      "required_groups": [
+        [
+          "E004"
+        ]
+      ],
+      "family": "history-student-list"
+    },
+    {
+      "id": "P005",
+      "category": "single",
+      "question": "汇总历史挂科记录中每名学生的记录行数？",
+      "required_groups": [
+        [
+          "E005"
+        ]
+      ],
+      "family": "history-per-student"
+    },
+    {
+      "id": "P006",
+      "category": "single",
+      "question": "找出历史挂科记录中有多行记录的学生学号？",
+      "required_groups": [
+        [
+          "E006"
+        ]
+      ],
+      "family": "history-multiple"
+    },
+    {
+      "id": "P007",
+      "category": "single",
+      "question": "按学年学期汇总历史挂科记录的数据条数？",
+      "required_groups": [
+        [
+          "E007"
+        ]
+      ],
+      "family": "history-group-rows-学年学期"
+    },
+    {
+      "id": "P008",
+      "category": "single",
+      "question": "按学年学期汇总历史挂科记录涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E008"
+        ]
+      ],
+      "family": "history-group-students-学年学期"
+    },
+    {
+      "id": "P009",
+      "category": "single",
+      "question": "按班级汇总历史挂科记录的数据条数？",
+      "required_groups": [
+        [
+          "E009"
+        ]
+      ],
+      "family": "history-group-rows-班级"
+    },
+    {
+      "id": "P010",
+      "category": "single",
+      "question": "按班级汇总历史挂科记录涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E010"
+        ]
+      ],
+      "family": "history-group-students-班级"
+    },
+    {
+      "id": "P011",
+      "category": "single",
+      "question": "按专业方向汇总历史挂科记录的数据条数？",
+      "required_groups": [
+        [
+          "E011"
+        ]
+      ],
+      "family": "history-group-rows-专业方向"
+    },
+    {
+      "id": "P012",
+      "category": "single",
+      "question": "按专业方向汇总历史挂科记录涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E012"
+        ]
+      ],
+      "family": "history-group-students-专业方向"
+    },
+    {
+      "id": "P013",
+      "category": "single",
+      "question": "按专业汇总历史挂科记录的数据条数？",
+      "required_groups": [
+        [
+          "E013"
+        ]
+      ],
+      "family": "history-group-rows-专业"
+    },
+    {
+      "id": "P014",
+      "category": "single",
+      "question": "按专业汇总历史挂科记录涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E014"
+        ]
+      ],
+      "family": "history-group-students-专业"
+    },
+    {
+      "id": "P015",
+      "category": "single",
+      "question": "按学院汇总历史挂科记录的数据条数？",
+      "required_groups": [
+        [
+          "E015"
+        ]
+      ],
+      "family": "history-group-rows-学院"
+    },
+    {
+      "id": "P016",
+      "category": "single",
+      "question": "按学院汇总历史挂科记录涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E016"
+        ]
+      ],
+      "family": "history-group-students-学院"
+    },
+    {
+      "id": "P017",
+      "category": "single",
+      "question": "按课程号汇总历史挂科记录的数据条数？",
+      "required_groups": [
+        [
+          "E017"
+        ]
+      ],
+      "family": "history-group-rows-课程号"
+    },
+    {
+      "id": "P018",
+      "category": "single",
+      "question": "按课程号汇总历史挂科记录涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E018"
+        ]
+      ],
+      "family": "history-group-students-课程号"
+    },
+    {
+      "id": "P019",
+      "category": "single",
+      "question": "按课程名汇总历史挂科记录的数据条数？",
+      "required_groups": [
+        [
+          "E019"
+        ]
+      ],
+      "family": "history-group-rows-课程名"
+    },
+    {
+      "id": "P020",
+      "category": "single",
+      "question": "按课程名汇总历史挂科记录涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E020"
+        ]
+      ],
+      "family": "history-group-students-课程名"
+    },
+    {
+      "id": "P021",
+      "category": "single",
+      "question": "求一下历史挂科记录的学分均值？",
+      "required_groups": [
+        [
+          "E021"
+        ]
+      ],
+      "family": "history-学分-avg"
+    },
+    {
+      "id": "P022",
+      "category": "single",
+      "question": "求一下历史挂科记录的学分最高值？",
+      "required_groups": [
+        [
+          "E022"
+        ]
+      ],
+      "family": "history-学分-max"
+    },
+    {
+      "id": "P023",
+      "category": "single",
+      "question": "求一下历史挂科记录的学分最低值？",
+      "required_groups": [
+        [
+          "E023"
+        ]
+      ],
+      "family": "history-学分-min"
+    },
+    {
+      "id": "P024",
+      "category": "single",
+      "question": "帮我找出历史挂科记录中学分高于本表均值的记录？",
+      "required_groups": [
+        [
+          "E024"
+        ]
+      ],
+      "family": "history-学分-above-avg"
+    },
+    {
+      "id": "P025",
+      "category": "single",
+      "question": "帮我找出历史挂科记录中分数为空的行？",
+      "required_groups": [
+        [
+          "E025"
+        ]
+      ],
+      "family": "history-score-分数为空"
+    },
+    {
+      "id": "P026",
+      "category": "single",
+      "question": "帮我找出历史挂科记录中分数为零的行？",
+      "required_groups": [
+        [
+          "E026"
+        ]
+      ],
+      "family": "history-score-分数为零"
+    },
+    {
+      "id": "P027",
+      "category": "single",
+      "question": "帮我找出历史挂科记录中数值分数低于60的行？",
+      "required_groups": [
+        [
+          "E027"
+        ]
+      ],
+      "family": "history-score-数值分数低于60"
+    },
+    {
+      "id": "P028",
+      "category": "single",
+      "question": "帮我找出历史挂科记录中数值分数达到60的行？",
+      "required_groups": [
+        [
+          "E028"
+        ]
+      ],
+      "family": "history-score-数值分数达到60"
+    },
+    {
+      "id": "P029",
+      "category": "single",
+      "question": "帮我找出历史挂科记录中数值分数达到90的行？",
+      "required_groups": [
+        [
+          "E029"
+        ]
+      ],
+      "family": "history-score-数值分数达到90"
+    },
+    {
+      "id": "P030",
+      "category": "single",
+      "question": "历史挂科记录包含多少门不同课程？",
+      "required_groups": [
+        [
+          "E030"
+        ]
+      ],
+      "family": "history-course-count"
+    },
+    {
+      "id": "P031",
+      "category": "single",
+      "question": "按学号汇总历史挂科记录中的不同课程数量？",
+      "required_groups": [
+        [
+          "E031"
+        ]
+      ],
+      "family": "history-student-courses"
+    },
+    {
+      "id": "P032",
+      "category": "single",
+      "question": "找出历史挂科记录中同一学生同一课程出现多次的组合？",
+      "required_groups": [
+        [
+          "E032"
+        ]
+      ],
+      "family": "history-repeat-course"
+    },
+    {
+      "id": "P033",
+      "category": "single",
+      "question": "给我展示全部目前仍未通过的记录，依照学生编号排列？",
+      "required_groups": [
+        [
+          "E033"
+        ]
+      ],
+      "family": "current-detail"
+    },
+    {
+      "id": "P034",
+      "category": "single",
+      "question": "目前仍未通过的记录一共有几条数据？",
+      "required_groups": [
+        [
+          "E034"
+        ]
+      ],
+      "family": "current-rows"
+    },
+    {
+      "id": "P035",
+      "category": "single",
+      "question": "目前仍未通过的记录去重后有几位学生？",
+      "required_groups": [
+        [
+          "E035"
+        ]
+      ],
+      "family": "current-students"
+    },
+    {
+      "id": "P036",
+      "category": "single",
+      "question": "帮我找出目前仍未通过的记录中出现的学生学号？",
+      "required_groups": [
+        [
+          "E036"
+        ]
+      ],
+      "family": "current-student-list"
+    },
+    {
+      "id": "P037",
+      "category": "single",
+      "question": "汇总目前仍未通过的记录中每名学生的记录行数？",
+      "required_groups": [
+        [
+          "E037"
+        ]
+      ],
+      "family": "current-per-student"
+    },
+    {
+      "id": "P038",
+      "category": "single",
+      "question": "找出目前仍未通过的记录中有多行记录的学生学号？",
+      "required_groups": [
+        [
+          "E038"
+        ]
+      ],
+      "family": "current-multiple"
+    },
+    {
+      "id": "P039",
+      "category": "single",
+      "question": "按院系汇总目前仍未通过的记录的数据条数？",
+      "required_groups": [
+        [
+          "E039"
+        ]
+      ],
+      "family": "current-group-rows-院系"
+    },
+    {
+      "id": "P040",
+      "category": "single",
+      "question": "按院系汇总目前仍未通过的记录涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E040"
+        ]
+      ],
+      "family": "current-group-students-院系"
+    },
+    {
+      "id": "P041",
+      "category": "single",
+      "question": "按专业名汇总目前仍未通过的记录的数据条数？",
+      "required_groups": [
+        [
+          "E041"
+        ]
+      ],
+      "family": "current-group-rows-专业名"
+    },
+    {
+      "id": "P042",
+      "category": "single",
+      "question": "按专业名汇总目前仍未通过的记录涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E042"
+        ]
+      ],
+      "family": "current-group-students-专业名"
+    },
+    {
+      "id": "P043",
+      "category": "single",
+      "question": "按专业方向汇总目前仍未通过的记录的数据条数？",
+      "required_groups": [
+        [
+          "E043"
+        ]
+      ],
+      "family": "current-group-rows-专业方向"
+    },
+    {
+      "id": "P044",
+      "category": "single",
+      "question": "按专业方向汇总目前仍未通过的记录涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E044"
+        ]
+      ],
+      "family": "current-group-students-专业方向"
+    },
+    {
+      "id": "P045",
+      "category": "single",
+      "question": "按班级号汇总目前仍未通过的记录的数据条数？",
+      "required_groups": [
+        [
+          "E045"
+        ]
+      ],
+      "family": "current-group-rows-班级号"
+    },
+    {
+      "id": "P046",
+      "category": "single",
+      "question": "按班级号汇总目前仍未通过的记录涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E046"
+        ]
+      ],
+      "family": "current-group-students-班级号"
+    },
+    {
+      "id": "P047",
+      "category": "single",
+      "question": "按班名汇总目前仍未通过的记录的数据条数？",
+      "required_groups": [
+        [
+          "E047"
+        ]
+      ],
+      "family": "current-group-rows-班名"
+    },
+    {
+      "id": "P048",
+      "category": "single",
+      "question": "按班名汇总目前仍未通过的记录涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E048"
+        ]
+      ],
+      "family": "current-group-students-班名"
+    },
+    {
+      "id": "P049",
+      "category": "single",
+      "question": "按入学年级汇总目前仍未通过的记录的数据条数？",
+      "required_groups": [
+        [
+          "E049"
+        ]
+      ],
+      "family": "current-group-rows-入学年级"
+    },
+    {
+      "id": "P050",
+      "category": "single",
+      "question": "按入学年级汇总目前仍未通过的记录涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E050"
+        ]
+      ],
+      "family": "current-group-students-入学年级"
+    },
+    {
+      "id": "P051",
+      "category": "single",
+      "question": "按课程名汇总目前仍未通过的记录的数据条数？",
+      "required_groups": [
+        [
+          "E051"
+        ]
+      ],
+      "family": "current-group-rows-课程名"
+    },
+    {
+      "id": "P052",
+      "category": "single",
+      "question": "按课程名汇总目前仍未通过的记录涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E052"
+        ]
+      ],
+      "family": "current-group-students-课程名"
+    },
+    {
+      "id": "P053",
+      "category": "single",
+      "question": "求一下目前仍未通过的记录的学分均值？",
+      "required_groups": [
+        [
+          "E053"
+        ]
+      ],
+      "family": "current-学分-avg"
+    },
+    {
+      "id": "P054",
+      "category": "single",
+      "question": "求一下目前仍未通过的记录的学分最高值？",
+      "required_groups": [
+        [
+          "E054"
+        ]
+      ],
+      "family": "current-学分-max"
+    },
+    {
+      "id": "P055",
+      "category": "single",
+      "question": "求一下目前仍未通过的记录的学分最低值？",
+      "required_groups": [
+        [
+          "E055"
+        ]
+      ],
+      "family": "current-学分-min"
+    },
+    {
+      "id": "P056",
+      "category": "single",
+      "question": "帮我找出目前仍未通过的记录中学分高于本表均值的记录？",
+      "required_groups": [
+        [
+          "E056"
+        ]
+      ],
+      "family": "current-学分-above-avg"
+    },
+    {
+      "id": "P057",
+      "category": "single",
+      "question": "求一下目前仍未通过的记录的不及格次数均值？",
+      "required_groups": [
+        [
+          "E057"
+        ]
+      ],
+      "family": "current-不及格次数-avg"
+    },
+    {
+      "id": "P058",
+      "category": "single",
+      "question": "求一下目前仍未通过的记录的不及格次数最高值？",
+      "required_groups": [
+        [
+          "E058"
+        ]
+      ],
+      "family": "current-不及格次数-max"
+    },
+    {
+      "id": "P059",
+      "category": "single",
+      "question": "求一下目前仍未通过的记录的不及格次数最低值？",
+      "required_groups": [
+        [
+          "E059"
+        ]
+      ],
+      "family": "current-不及格次数-min"
+    },
+    {
+      "id": "P060",
+      "category": "single",
+      "question": "帮我找出目前仍未通过的记录中不及格次数高于本表均值的记录？",
+      "required_groups": [
+        [
+          "E060"
+        ]
+      ],
+      "family": "current-不及格次数-above-avg"
+    },
+    {
+      "id": "P061",
+      "category": "single",
+      "question": "帮我找出目前仍未通过的记录中分数为空的行？",
+      "required_groups": [
+        [
+          "E061"
+        ]
+      ],
+      "family": "current-score-分数为空"
+    },
+    {
+      "id": "P062",
+      "category": "single",
+      "question": "帮我找出目前仍未通过的记录中分数为零的行？",
+      "required_groups": [
+        [
+          "E062"
+        ]
+      ],
+      "family": "current-score-分数为零"
+    },
+    {
+      "id": "P063",
+      "category": "single",
+      "question": "帮我找出目前仍未通过的记录中数值分数低于60的行？",
+      "required_groups": [
+        [
+          "E063"
+        ]
+      ],
+      "family": "current-score-数值分数低于60"
+    },
+    {
+      "id": "P064",
+      "category": "single",
+      "question": "帮我找出目前仍未通过的记录中数值分数达到60的行？",
+      "required_groups": [
+        [
+          "E064"
+        ]
+      ],
+      "family": "current-score-数值分数达到60"
+    },
+    {
+      "id": "P065",
+      "category": "single",
+      "question": "帮我找出目前仍未通过的记录中数值分数达到90的行？",
+      "required_groups": [
+        [
+          "E065"
+        ]
+      ],
+      "family": "current-score-数值分数达到90"
+    },
+    {
+      "id": "P066",
+      "category": "single",
+      "question": "目前仍未通过的记录包含多少门不同课程？",
+      "required_groups": [
+        [
+          "E066"
+        ]
+      ],
+      "family": "current-course-count"
+    },
+    {
+      "id": "P067",
+      "category": "single",
+      "question": "按学号汇总目前仍未通过的记录中的不同课程数量？",
+      "required_groups": [
+        [
+          "E067"
+        ]
+      ],
+      "family": "current-student-courses"
+    },
+    {
+      "id": "P068",
+      "category": "single",
+      "question": "找出目前仍未通过的记录中同一学生同一课程出现多次的组合？",
+      "required_groups": [
+        [
+          "E068"
+        ]
+      ],
+      "family": "current-repeat-course"
+    },
+    {
+      "id": "P069",
+      "category": "single",
+      "question": "给我展示全部逐条考试成绩，依照学生编号排列？",
+      "required_groups": [
+        [
+          "E069"
+        ]
+      ],
+      "family": "detail-detail"
+    },
+    {
+      "id": "P070",
+      "category": "single",
+      "question": "逐条考试成绩一共有几条数据？",
+      "required_groups": [
+        [
+          "E070"
+        ]
+      ],
+      "family": "detail-rows"
+    },
+    {
+      "id": "P071",
+      "category": "single",
+      "question": "逐条考试成绩去重后有几位学生？",
+      "required_groups": [
+        [
+          "E071"
+        ]
+      ],
+      "family": "detail-students"
+    },
+    {
+      "id": "P072",
+      "category": "single",
+      "question": "帮我找出逐条考试成绩中出现的学生学号？",
+      "required_groups": [
+        [
+          "E072"
+        ]
+      ],
+      "family": "detail-student-list"
+    },
+    {
+      "id": "P073",
+      "category": "single",
+      "question": "汇总逐条考试成绩中每名学生的记录行数？",
+      "required_groups": [
+        [
+          "E073"
+        ]
+      ],
+      "family": "detail-per-student"
+    },
+    {
+      "id": "P074",
+      "category": "single",
+      "question": "找出逐条考试成绩中有多行记录的学生学号？",
+      "required_groups": [
+        [
+          "E074"
+        ]
+      ],
+      "family": "detail-multiple"
+    },
+    {
+      "id": "P075",
+      "category": "single",
+      "question": "按课程号汇总逐条考试成绩的数据条数？",
+      "required_groups": [
+        [
+          "E075"
+        ]
+      ],
+      "family": "detail-group-rows-课程号"
+    },
+    {
+      "id": "P076",
+      "category": "single",
+      "question": "按课程号汇总逐条考试成绩涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E076"
+        ]
+      ],
+      "family": "detail-group-students-课程号"
+    },
+    {
+      "id": "P077",
+      "category": "single",
+      "question": "按课序号汇总逐条考试成绩的数据条数？",
+      "required_groups": [
+        [
+          "E077"
+        ]
+      ],
+      "family": "detail-group-rows-课序号"
+    },
+    {
+      "id": "P078",
+      "category": "single",
+      "question": "按课序号汇总逐条考试成绩涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E078"
+        ]
+      ],
+      "family": "detail-group-students-课序号"
+    },
+    {
+      "id": "P079",
+      "category": "single",
+      "question": "按课程名汇总逐条考试成绩的数据条数？",
+      "required_groups": [
+        [
+          "E079"
+        ]
+      ],
+      "family": "detail-group-rows-课程名"
+    },
+    {
+      "id": "P080",
+      "category": "single",
+      "question": "按课程名汇总逐条考试成绩涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E080"
+        ]
+      ],
+      "family": "detail-group-students-课程名"
+    },
+    {
+      "id": "P081",
+      "category": "single",
+      "question": "按考试时间汇总逐条考试成绩的数据条数？",
+      "required_groups": [
+        [
+          "E081"
+        ]
+      ],
+      "family": "detail-group-rows-考试时间"
+    },
+    {
+      "id": "P082",
+      "category": "single",
+      "question": "按考试时间汇总逐条考试成绩涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E082"
+        ]
+      ],
+      "family": "detail-group-students-考试时间"
+    },
+    {
+      "id": "P083",
+      "category": "single",
+      "question": "按修读方式汇总逐条考试成绩的数据条数？",
+      "required_groups": [
+        [
+          "E083"
+        ]
+      ],
+      "family": "detail-group-rows-修读方式"
+    },
+    {
+      "id": "P084",
+      "category": "single",
+      "question": "按修读方式汇总逐条考试成绩涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E084"
+        ]
+      ],
+      "family": "detail-group-students-修读方式"
+    },
+    {
+      "id": "P085",
+      "category": "single",
+      "question": "按课程属性汇总逐条考试成绩的数据条数？",
+      "required_groups": [
+        [
+          "E085"
+        ]
+      ],
+      "family": "detail-group-rows-课程属性"
+    },
+    {
+      "id": "P086",
+      "category": "single",
+      "question": "按课程属性汇总逐条考试成绩涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E086"
+        ]
+      ],
+      "family": "detail-group-students-课程属性"
+    },
+    {
+      "id": "P087",
+      "category": "single",
+      "question": "按班级汇总逐条考试成绩的数据条数？",
+      "required_groups": [
+        [
+          "E087"
+        ]
+      ],
+      "family": "detail-group-rows-班级"
+    },
+    {
+      "id": "P088",
+      "category": "single",
+      "question": "按班级汇总逐条考试成绩涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E088"
+        ]
+      ],
+      "family": "detail-group-students-班级"
+    },
+    {
+      "id": "P089",
+      "category": "single",
+      "question": "求一下逐条考试成绩的学分均值？",
+      "required_groups": [
+        [
+          "E089"
+        ]
+      ],
+      "family": "detail-学分-avg"
+    },
+    {
+      "id": "P090",
+      "category": "single",
+      "question": "求一下逐条考试成绩的学分最高值？",
+      "required_groups": [
+        [
+          "E090"
+        ]
+      ],
+      "family": "detail-学分-max"
+    },
+    {
+      "id": "P091",
+      "category": "single",
+      "question": "求一下逐条考试成绩的学分最低值？",
+      "required_groups": [
+        [
+          "E091"
+        ]
+      ],
+      "family": "detail-学分-min"
+    },
+    {
+      "id": "P092",
+      "category": "single",
+      "question": "帮我找出逐条考试成绩中学分高于本表均值的记录？",
+      "required_groups": [
+        [
+          "E092"
+        ]
+      ],
+      "family": "detail-学分-above-avg"
+    },
+    {
+      "id": "P093",
+      "category": "single",
+      "question": "帮我找出逐条考试成绩中分数为空的行？",
+      "required_groups": [
+        [
+          "E093"
+        ]
+      ],
+      "family": "detail-score-分数为空"
+    },
+    {
+      "id": "P094",
+      "category": "single",
+      "question": "帮我找出逐条考试成绩中分数为零的行？",
+      "required_groups": [
+        [
+          "E094"
+        ]
+      ],
+      "family": "detail-score-分数为零"
+    },
+    {
+      "id": "P095",
+      "category": "single",
+      "question": "帮我找出逐条考试成绩中数值分数低于60的行？",
+      "required_groups": [
+        [
+          "E095"
+        ]
+      ],
+      "family": "detail-score-数值分数低于60"
+    },
+    {
+      "id": "P096",
+      "category": "single",
+      "question": "帮我找出逐条考试成绩中数值分数达到60的行？",
+      "required_groups": [
+        [
+          "E096"
+        ]
+      ],
+      "family": "detail-score-数值分数达到60"
+    },
+    {
+      "id": "P097",
+      "category": "single",
+      "question": "帮我找出逐条考试成绩中数值分数达到90的行？",
+      "required_groups": [
+        [
+          "E097"
+        ]
+      ],
+      "family": "detail-score-数值分数达到90"
+    },
+    {
+      "id": "P098",
+      "category": "single",
+      "question": "逐条考试成绩包含多少门不同课程？",
+      "required_groups": [
+        [
+          "E098"
+        ]
+      ],
+      "family": "detail-course-count"
+    },
+    {
+      "id": "P099",
+      "category": "single",
+      "question": "按学号汇总逐条考试成绩中的不同课程数量？",
+      "required_groups": [
+        [
+          "E099"
+        ]
+      ],
+      "family": "detail-student-courses"
+    },
+    {
+      "id": "P100",
+      "category": "single",
+      "question": "找出逐条考试成绩中同一学生同一课程出现多次的组合？",
+      "required_groups": [
+        [
+          "E100"
+        ]
+      ],
+      "family": "detail-repeat-course"
+    },
+    {
+      "id": "P101",
+      "category": "single",
+      "question": "给我展示全部成绩排名报表里的学生，依照学生编号排列？",
+      "required_groups": [
+        [
+          "E101"
+        ]
+      ],
+      "family": "ranking-detail"
+    },
+    {
+      "id": "P102",
+      "category": "single",
+      "question": "成绩排名报表里的学生一共有几条数据？",
+      "required_groups": [
+        [
+          "E102"
+        ]
+      ],
+      "family": "ranking-rows"
+    },
+    {
+      "id": "P103",
+      "category": "single",
+      "question": "成绩排名报表里的学生去重后有几位学生？",
+      "required_groups": [
+        [
+          "E103"
+        ]
+      ],
+      "family": "ranking-students"
+    },
+    {
+      "id": "P104",
+      "category": "single",
+      "question": "帮我找出成绩排名报表里的学生中出现的学生学号？",
+      "required_groups": [
+        [
+          "E104"
+        ]
+      ],
+      "family": "ranking-student-list"
+    },
+    {
+      "id": "P105",
+      "category": "single",
+      "question": "汇总成绩排名报表里的学生中每名学生的记录行数？",
+      "required_groups": [
+        [
+          "E105"
+        ]
+      ],
+      "family": "ranking-per-student"
+    },
+    {
+      "id": "P106",
+      "category": "single",
+      "question": "找出成绩排名报表里的学生中有多行记录的学生学号？",
+      "required_groups": [
+        [
+          "E106"
+        ]
+      ],
+      "family": "ranking-multiple"
+    },
+    {
+      "id": "P107",
+      "category": "single",
+      "question": "按班级汇总成绩排名报表里的学生的数据条数？",
+      "required_groups": [
+        [
+          "E107"
+        ]
+      ],
+      "family": "ranking-group-rows-班级"
+    },
+    {
+      "id": "P108",
+      "category": "single",
+      "question": "按班级汇总成绩排名报表里的学生涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E108"
+        ]
+      ],
+      "family": "ranking-group-students-班级"
+    },
+    {
+      "id": "P109",
+      "category": "single",
+      "question": "按专业方向汇总成绩排名报表里的学生的数据条数？",
+      "required_groups": [
+        [
+          "E109"
+        ]
+      ],
+      "family": "ranking-group-rows-专业方向"
+    },
+    {
+      "id": "P110",
+      "category": "single",
+      "question": "按专业方向汇总成绩排名报表里的学生涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E110"
+        ]
+      ],
+      "family": "ranking-group-students-专业方向"
+    },
+    {
+      "id": "P111",
+      "category": "single",
+      "question": "按专业汇总成绩排名报表里的学生的数据条数？",
+      "required_groups": [
+        [
+          "E111"
+        ]
+      ],
+      "family": "ranking-group-rows-专业"
+    },
+    {
+      "id": "P112",
+      "category": "single",
+      "question": "按专业汇总成绩排名报表里的学生涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E112"
+        ]
+      ],
+      "family": "ranking-group-students-专业"
+    },
+    {
+      "id": "P113",
+      "category": "single",
+      "question": "按院系汇总成绩排名报表里的学生的数据条数？",
+      "required_groups": [
+        [
+          "E113"
+        ]
+      ],
+      "family": "ranking-group-rows-院系"
+    },
+    {
+      "id": "P114",
+      "category": "single",
+      "question": "按院系汇总成绩排名报表里的学生涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E114"
+        ]
+      ],
+      "family": "ranking-group-students-院系"
+    },
+    {
+      "id": "P115",
+      "category": "single",
+      "question": "求一下成绩排名报表里的学生的GPA均值？",
+      "required_groups": [
+        [
+          "E115"
+        ]
+      ],
+      "family": "ranking-GPA-avg"
+    },
+    {
+      "id": "P116",
+      "category": "single",
+      "question": "求一下成绩排名报表里的学生的GPA最高值？",
+      "required_groups": [
+        [
+          "E116"
+        ]
+      ],
+      "family": "ranking-GPA-max"
+    },
+    {
+      "id": "P117",
+      "category": "single",
+      "question": "求一下成绩排名报表里的学生的GPA最低值？",
+      "required_groups": [
+        [
+          "E117"
+        ]
+      ],
+      "family": "ranking-GPA-min"
+    },
+    {
+      "id": "P118",
+      "category": "single",
+      "question": "帮我找出成绩排名报表里的学生中GPA高于本表均值的记录？",
+      "required_groups": [
+        [
+          "E118"
+        ]
+      ],
+      "family": "ranking-GPA-above-avg"
+    },
+    {
+      "id": "P119",
+      "category": "single",
+      "question": "求一下成绩排名报表里的学生的加权学分成绩均值？",
+      "required_groups": [
+        [
+          "E119"
+        ]
+      ],
+      "family": "ranking-加权学分成绩-avg"
+    },
+    {
+      "id": "P120",
+      "category": "single",
+      "question": "求一下成绩排名报表里的学生的加权学分成绩最高值？",
+      "required_groups": [
+        [
+          "E120"
+        ]
+      ],
+      "family": "ranking-加权学分成绩-max"
+    },
+    {
+      "id": "P121",
+      "category": "single",
+      "question": "求一下成绩排名报表里的学生的加权学分成绩最低值？",
+      "required_groups": [
+        [
+          "E121"
+        ]
+      ],
+      "family": "ranking-加权学分成绩-min"
+    },
+    {
+      "id": "P122",
+      "category": "single",
+      "question": "帮我找出成绩排名报表里的学生中加权学分成绩高于本表均值的记录？",
+      "required_groups": [
+        [
+          "E122"
+        ]
+      ],
+      "family": "ranking-加权学分成绩-above-avg"
+    },
+    {
+      "id": "P123",
+      "category": "single",
+      "question": "求一下成绩排名报表里的学生的平均成绩均值？",
+      "required_groups": [
+        [
+          "E123"
+        ]
+      ],
+      "family": "ranking-平均成绩-avg"
+    },
+    {
+      "id": "P124",
+      "category": "single",
+      "question": "求一下成绩排名报表里的学生的平均成绩最高值？",
+      "required_groups": [
+        [
+          "E124"
+        ]
+      ],
+      "family": "ranking-平均成绩-max"
+    },
+    {
+      "id": "P125",
+      "category": "single",
+      "question": "求一下成绩排名报表里的学生的平均成绩最低值？",
+      "required_groups": [
+        [
+          "E125"
+        ]
+      ],
+      "family": "ranking-平均成绩-min"
+    },
+    {
+      "id": "P126",
+      "category": "single",
+      "question": "帮我找出成绩排名报表里的学生中平均成绩高于本表均值的记录？",
+      "required_groups": [
+        [
+          "E126"
+        ]
+      ],
+      "family": "ranking-平均成绩-above-avg"
+    },
+    {
+      "id": "P127",
+      "category": "single",
+      "question": "求一下成绩排名报表里的学生的尚不及格学分均值？",
+      "required_groups": [
+        [
+          "E127"
+        ]
+      ],
+      "family": "ranking-尚不及格学分-avg"
+    },
+    {
+      "id": "P128",
+      "category": "single",
+      "question": "求一下成绩排名报表里的学生的尚不及格学分最高值？",
+      "required_groups": [
+        [
+          "E128"
+        ]
+      ],
+      "family": "ranking-尚不及格学分-max"
+    },
+    {
+      "id": "P129",
+      "category": "single",
+      "question": "求一下成绩排名报表里的学生的尚不及格学分最低值？",
+      "required_groups": [
+        [
+          "E129"
+        ]
+      ],
+      "family": "ranking-尚不及格学分-min"
+    },
+    {
+      "id": "P130",
+      "category": "single",
+      "question": "帮我找出成绩排名报表里的学生中尚不及格学分高于本表均值的记录？",
+      "required_groups": [
+        [
+          "E130"
+        ]
+      ],
+      "family": "ranking-尚不及格学分-above-avg"
+    },
+    {
+      "id": "P131",
+      "category": "single",
+      "question": "帮我找出导入的报表GPA专业排名排名不超过第10名学生及排名位置？",
+      "required_groups": [
+        [
+          "E131"
+        ]
+      ],
+      "family": "ranking-top-GPA专业排名"
+    },
+    {
+      "id": "P132",
+      "category": "single",
+      "question": "给我展示导入的报表每名学生的GPA专业排名？",
+      "required_groups": [
+        [
+          "E132"
+        ]
+      ],
+      "family": "ranking-list-GPA专业排名"
+    },
+    {
+      "id": "P133",
+      "category": "single",
+      "question": "帮我找出导入的报表GPA专业方向排名排名不超过第10名学生及排名位置？",
+      "required_groups": [
+        [
+          "E133"
+        ]
+      ],
+      "family": "ranking-top-GPA专业方向排名"
+    },
+    {
+      "id": "P134",
+      "category": "single",
+      "question": "给我展示导入的报表每名学生的GPA专业方向排名？",
+      "required_groups": [
+        [
+          "E134"
+        ]
+      ],
+      "family": "ranking-list-GPA专业方向排名"
+    },
+    {
+      "id": "P135",
+      "category": "single",
+      "question": "帮我找出导入的报表GPA班级排名排名不超过第10名学生及排名位置？",
+      "required_groups": [
+        [
+          "E135"
+        ]
+      ],
+      "family": "ranking-top-GPA班级排名"
+    },
+    {
+      "id": "P136",
+      "category": "single",
+      "question": "给我展示导入的报表每名学生的GPA班级排名？",
+      "required_groups": [
+        [
+          "E136"
+        ]
+      ],
+      "family": "ranking-list-GPA班级排名"
+    },
+    {
+      "id": "P137",
+      "category": "single",
+      "question": "帮我找出导入的报表加权专业排名排名不超过第10名学生及排名位置？",
+      "required_groups": [
+        [
+          "E137"
+        ]
+      ],
+      "family": "ranking-top-加权专业排名"
+    },
+    {
+      "id": "P138",
+      "category": "single",
+      "question": "给我展示导入的报表每名学生的加权专业排名？",
+      "required_groups": [
+        [
+          "E138"
+        ]
+      ],
+      "family": "ranking-list-加权专业排名"
+    },
+    {
+      "id": "P139",
+      "category": "single",
+      "question": "帮我找出导入的报表加权专业方向排名排名不超过第10名学生及排名位置？",
+      "required_groups": [
+        [
+          "E139"
+        ]
+      ],
+      "family": "ranking-top-加权专业方向排名"
+    },
+    {
+      "id": "P140",
+      "category": "single",
+      "question": "给我展示导入的报表每名学生的加权专业方向排名？",
+      "required_groups": [
+        [
+          "E140"
+        ]
+      ],
+      "family": "ranking-list-加权专业方向排名"
+    },
+    {
+      "id": "P141",
+      "category": "single",
+      "question": "帮我找出导入的报表加权班级排名排名不超过第10名学生及排名位置？",
+      "required_groups": [
+        [
+          "E141"
+        ]
+      ],
+      "family": "ranking-top-加权班级排名"
+    },
+    {
+      "id": "P142",
+      "category": "single",
+      "question": "给我展示导入的报表每名学生的加权班级排名？",
+      "required_groups": [
+        [
+          "E142"
+        ]
+      ],
+      "family": "ranking-list-加权班级排名"
+    },
+    {
+      "id": "P143",
+      "category": "single",
+      "question": "帮我找出导入的报表平均成绩专业排名排名不超过第10名学生及排名位置？",
+      "required_groups": [
+        [
+          "E143"
+        ]
+      ],
+      "family": "ranking-top-平均成绩专业排名"
+    },
+    {
+      "id": "P144",
+      "category": "single",
+      "question": "给我展示导入的报表每名学生的平均成绩专业排名？",
+      "required_groups": [
+        [
+          "E144"
+        ]
+      ],
+      "family": "ranking-list-平均成绩专业排名"
+    },
+    {
+      "id": "P145",
+      "category": "single",
+      "question": "帮我找出导入的报表平均成绩专业方向排名排名不超过第10名学生及排名位置？",
+      "required_groups": [
+        [
+          "E145"
+        ]
+      ],
+      "family": "ranking-top-平均成绩专业方向排名"
+    },
+    {
+      "id": "P146",
+      "category": "single",
+      "question": "给我展示导入的报表每名学生的平均成绩专业方向排名？",
+      "required_groups": [
+        [
+          "E146"
+        ]
+      ],
+      "family": "ranking-list-平均成绩专业方向排名"
+    },
+    {
+      "id": "P147",
+      "category": "single",
+      "question": "帮我找出导入的报表平均成绩班级排名排名不超过第10名学生及排名位置？",
+      "required_groups": [
+        [
+          "E147"
+        ]
+      ],
+      "family": "ranking-top-平均成绩班级排名"
+    },
+    {
+      "id": "P148",
+      "category": "single",
+      "question": "给我展示导入的报表每名学生的平均成绩班级排名？",
+      "required_groups": [
+        [
+          "E148"
+        ]
+      ],
+      "family": "ranking-list-平均成绩班级排名"
+    },
+    {
+      "id": "P149",
+      "category": "single",
+      "question": "给我展示各学生导入的报表中的要求总学分？",
+      "required_groups": [
+        [
+          "E149"
+        ]
+      ],
+      "family": "ranking-credit-要求总学分"
+    },
+    {
+      "id": "P150",
+      "category": "single",
+      "question": "按班级求一下导入的报表要求总学分的均值？",
+      "required_groups": [
+        [
+          "E150"
+        ]
+      ],
+      "family": "ranking-credit-avg-要求总学分"
+    },
+    {
+      "id": "P151",
+      "category": "single",
+      "question": "给我展示各学生导入的报表中的已修课程学分？",
+      "required_groups": [
+        [
+          "E151"
+        ]
+      ],
+      "family": "ranking-credit-已修课程学分"
+    },
+    {
+      "id": "P152",
+      "category": "single",
+      "question": "按班级求一下导入的报表已修课程学分的均值？",
+      "required_groups": [
+        [
+          "E152"
+        ]
+      ],
+      "family": "ranking-credit-avg-已修课程学分"
+    },
+    {
+      "id": "P153",
+      "category": "single",
+      "question": "给我展示各学生导入的报表中的已修自主实践学分？",
+      "required_groups": [
+        [
+          "E153"
+        ]
+      ],
+      "family": "ranking-credit-已修自主实践学分"
+    },
+    {
+      "id": "P154",
+      "category": "single",
+      "question": "按班级求一下导入的报表已修自主实践学分的均值？",
+      "required_groups": [
+        [
+          "E154"
+        ]
+      ],
+      "family": "ranking-credit-avg-已修自主实践学分"
+    },
+    {
+      "id": "P155",
+      "category": "single",
+      "question": "给我展示各学生导入的报表中的曾不及格学分？",
+      "required_groups": [
+        [
+          "E155"
+        ]
+      ],
+      "family": "ranking-credit-曾不及格学分"
+    },
+    {
+      "id": "P156",
+      "category": "single",
+      "question": "按班级求一下导入的报表曾不及格学分的均值？",
+      "required_groups": [
+        [
+          "E156"
+        ]
+      ],
+      "family": "ranking-credit-avg-曾不及格学分"
+    },
+    {
+      "id": "P157",
+      "category": "single",
+      "question": "给我展示各学生导入的报表中的尚不及格学分？",
+      "required_groups": [
+        [
+          "E157"
+        ]
+      ],
+      "family": "ranking-credit-尚不及格学分"
+    },
+    {
+      "id": "P158",
+      "category": "single",
+      "question": "按班级求一下导入的报表尚不及格学分的均值？",
+      "required_groups": [
+        [
+          "E158"
+        ]
+      ],
+      "family": "ranking-credit-avg-尚不及格学分"
+    },
+    {
+      "id": "P159",
+      "category": "single",
+      "question": "帮我找出学号：曾不及格表中，在尚不及格表存在记录的学生？",
+      "required_groups": [
+        [
+          "E159"
+        ]
+      ],
+      "family": "cross-history-current-True-False"
+    },
+    {
+      "id": "P160",
+      "category": "single",
+      "question": "汇总人数：曾不及格表中，在尚不及格表存在记录的学生？",
+      "required_groups": [
+        [
+          "E160"
+        ]
+      ],
+      "family": "cross-history-current-True-True"
+    },
+    {
+      "id": "P161",
+      "category": "single",
+      "question": "帮我找出学号：曾不及格表中，在尚不及格表不存在记录的学生？",
+      "required_groups": [
+        [
+          "E161"
+        ]
+      ],
+      "family": "cross-history-current-False-False"
+    },
+    {
+      "id": "P162",
+      "category": "single",
+      "question": "汇总人数：曾不及格表中，在尚不及格表不存在记录的学生？",
+      "required_groups": [
+        [
+          "E162"
+        ]
+      ],
+      "family": "cross-history-current-False-True"
+    },
+    {
+      "id": "P163",
+      "category": "single",
+      "question": "帮我找出学号：尚不及格表中，在曾不及格表存在记录的学生？",
+      "required_groups": [
+        [
+          "E163"
+        ]
+      ],
+      "family": "cross-current-history-True-False"
+    },
+    {
+      "id": "P164",
+      "category": "single",
+      "question": "汇总人数：尚不及格表中，在曾不及格表存在记录的学生？",
+      "required_groups": [
+        [
+          "E164"
+        ]
+      ],
+      "family": "cross-current-history-True-True"
+    },
+    {
+      "id": "P165",
+      "category": "single",
+      "question": "帮我找出学号：尚不及格表中，在曾不及格表不存在记录的学生？",
+      "required_groups": [
+        [
+          "E165"
+        ]
+      ],
+      "family": "cross-current-history-False-False"
+    },
+    {
+      "id": "P166",
+      "category": "single",
+      "question": "汇总人数：尚不及格表中，在曾不及格表不存在记录的学生？",
+      "required_groups": [
+        [
+          "E166"
+        ]
+      ],
+      "family": "cross-current-history-False-True"
+    },
+    {
+      "id": "P167",
+      "category": "single",
+      "question": "帮我找出学号：排名表表中，在尚不及格表存在记录的学生？",
+      "required_groups": [
+        [
+          "E167"
+        ]
+      ],
+      "family": "cross-ranking-current-True-False"
+    },
+    {
+      "id": "P168",
+      "category": "single",
+      "question": "汇总人数：排名表表中，在尚不及格表存在记录的学生？",
+      "required_groups": [
+        [
+          "E168"
+        ]
+      ],
+      "family": "cross-ranking-current-True-True"
+    },
+    {
+      "id": "P169",
+      "category": "single",
+      "question": "帮我找出学号：排名表表中，在尚不及格表不存在记录的学生？",
+      "required_groups": [
+        [
+          "E169"
+        ]
+      ],
+      "family": "cross-ranking-current-False-False"
+    },
+    {
+      "id": "P170",
+      "category": "single",
+      "question": "汇总人数：排名表表中，在尚不及格表不存在记录的学生？",
+      "required_groups": [
+        [
+          "E170"
+        ]
+      ],
+      "family": "cross-ranking-current-False-True"
+    },
+    {
+      "id": "P171",
+      "category": "single",
+      "question": "帮我找出学号：排名表表中，在曾不及格表存在记录的学生？",
+      "required_groups": [
+        [
+          "E171"
+        ]
+      ],
+      "family": "cross-ranking-history-True-False"
+    },
+    {
+      "id": "P172",
+      "category": "single",
+      "question": "汇总人数：排名表表中，在曾不及格表存在记录的学生？",
+      "required_groups": [
+        [
+          "E172"
+        ]
+      ],
+      "family": "cross-ranking-history-True-True"
+    },
+    {
+      "id": "P173",
+      "category": "single",
+      "question": "帮我找出学号：排名表表中，在曾不及格表不存在记录的学生？",
+      "required_groups": [
+        [
+          "E173"
+        ]
+      ],
+      "family": "cross-ranking-history-False-False"
+    },
+    {
+      "id": "P174",
+      "category": "single",
+      "question": "汇总人数：排名表表中，在曾不及格表不存在记录的学生？",
+      "required_groups": [
+        [
+          "E174"
+        ]
+      ],
+      "family": "cross-ranking-history-False-True"
+    },
+    {
+      "id": "P175",
+      "category": "single",
+      "question": "帮我找出学号：成绩明细表中，在尚不及格表存在记录的学生？",
+      "required_groups": [
+        [
+          "E175"
+        ]
+      ],
+      "family": "cross-detail-current-True-False"
+    },
+    {
+      "id": "P176",
+      "category": "single",
+      "question": "汇总人数：成绩明细表中，在尚不及格表存在记录的学生？",
+      "required_groups": [
+        [
+          "E176"
+        ]
+      ],
+      "family": "cross-detail-current-True-True"
+    },
+    {
+      "id": "P177",
+      "category": "single",
+      "question": "帮我找出学号：成绩明细表中，在尚不及格表不存在记录的学生？",
+      "required_groups": [
+        [
+          "E177"
+        ]
+      ],
+      "family": "cross-detail-current-False-False"
+    },
+    {
+      "id": "P178",
+      "category": "single",
+      "question": "汇总人数：成绩明细表中，在尚不及格表不存在记录的学生？",
+      "required_groups": [
+        [
+          "E178"
+        ]
+      ],
+      "family": "cross-detail-current-False-True"
+    },
+    {
+      "id": "P179",
+      "category": "single",
+      "question": "各学生当前未通过记录中的不及格次数最高值？",
+      "required_groups": [
+        [
+          "E179"
+        ]
+      ],
+      "family": "custom-0"
+    },
+    {
+      "id": "P180",
+      "category": "single",
+      "question": "帮我检索不及格次数至少两次的当前未通过课程记录？",
+      "required_groups": [
+        [
+          "E180"
+        ]
+      ],
+      "family": "custom-1"
+    },
+    {
+      "id": "P181",
+      "category": "single",
+      "question": "按课程汇总当前未通过记录的不及格次数均值？",
+      "required_groups": [
+        [
+          "E181"
+        ]
+      ],
+      "family": "custom-2"
+    },
+    {
+      "id": "P182",
+      "category": "single",
+      "question": "按学年学期及课程汇总曾不及格人数？",
+      "required_groups": [
+        [
+          "E182"
+        ]
+      ],
+      "family": "custom-3"
+    },
+    {
+      "id": "P183",
+      "category": "single",
+      "question": "按课程属性和修读方式汇总成绩数据条数？",
+      "required_groups": [
+        [
+          "E183"
+        ]
+      ],
+      "family": "custom-4"
+    },
+    {
+      "id": "P184",
+      "category": "single",
+      "question": "按课程和课序号汇总成绩记录人数？",
+      "required_groups": [
+        [
+          "E184"
+        ]
+      ],
+      "family": "custom-5"
+    },
+    {
+      "id": "P185",
+      "category": "single",
+      "question": "帮我找出导入的报表中尚不及格学分大于零的学生？",
+      "required_groups": [
+        [
+          "E185"
+        ]
+      ],
+      "family": "custom-6"
+    },
+    {
+      "id": "P186",
+      "category": "single",
+      "question": "帮我找出曾不及格学分大于零但尚不及格学分为零的学生？",
+      "required_groups": [
+        [
+          "E186"
+        ]
+      ],
+      "family": "custom-7"
+    },
+    {
+      "id": "P187",
+      "category": "single",
+      "question": "求一下各学生要求总学分减去已修课程学分的差值？",
+      "required_groups": [
+        [
+          "E187"
+        ]
+      ],
+      "family": "custom-8"
+    },
+    {
+      "id": "P188",
+      "category": "single",
+      "question": "同时给我展示学生GPA、加权学分成绩和平均成绩？",
+      "required_groups": [
+        [
+          "E188"
+        ]
+      ],
+      "family": "custom-9"
+    },
+    {
+      "id": "P189",
+      "category": "single",
+      "question": "按班级汇总有尚不及格学分的学生人数？",
+      "required_groups": [
+        [
+          "E189"
+        ]
+      ],
+      "family": "custom-10"
+    },
+    {
+      "id": "P190",
+      "category": "single",
+      "question": "帮我找出GPA班级排名与加权班级排名不一致的学生？",
+      "required_groups": [
+        [
+          "E190"
+        ]
+      ],
+      "family": "custom-11"
+    },
+    {
+      "id": "P191",
+      "category": "single",
+      "question": "仅给我展示重修方式的成绩明细？",
+      "required_groups": [
+        [
+          "E191"
+        ]
+      ],
+      "family": "custom-12"
+    },
+    {
+      "id": "P192",
+      "category": "single",
+      "question": "仅给我展示正常修读的成绩明细？",
+      "required_groups": [
+        [
+          "E192"
+        ]
+      ],
+      "family": "custom-13"
+    },
+    {
+      "id": "P193",
+      "category": "single",
+      "question": "汇总各课程的重修学生人数？",
+      "required_groups": [
+        [
+          "E193"
+        ]
+      ],
+      "family": "custom-14"
+    },
+    {
+      "id": "P194",
+      "category": "single",
+      "question": "按课程属性汇总不同课程数？",
+      "required_groups": [
+        [
+          "E194"
+        ]
+      ],
+      "family": "custom-15"
+    },
+    {
+      "id": "P195",
+      "category": "single",
+      "question": "汇总各学生涉及多少个历史不及格学年学期？",
+      "required_groups": [
+        [
+          "E195"
+        ]
+      ],
+      "family": "custom-16"
+    },
+    {
+      "id": "P196",
+      "category": "single",
+      "question": "帮我找出曾在至少两个学年学期出现不及格记录的学生？",
+      "required_groups": [
+        [
+          "E196"
+        ]
+      ],
+      "family": "custom-17"
+    },
+    {
+      "id": "P197",
+      "category": "single",
+      "question": "按入学年级和课程汇总尚不及格人数？",
+      "required_groups": [
+        [
+          "E197"
+        ]
+      ],
+      "family": "custom-18"
+    },
+    {
+      "id": "P198",
+      "category": "single",
+      "question": "帮我检索导入的报表GPA缺失的学生？",
+      "required_groups": [
+        [
+          "E198"
+        ]
+      ],
+      "family": "custom-19"
+    },
+    {
+      "id": "P199",
+      "category": "single",
+      "question": "汇总各考试时间涉及的不同课程数？",
+      "required_groups": [
+        [
+          "E199"
+        ]
+      ],
+      "family": "custom-20"
+    },
+    {
+      "id": "P200",
+      "category": "single",
+      "question": "对比各学生的加权学分成绩与平均成绩差值？",
+      "required_groups": [
+        [
+          "E200"
+        ]
+      ],
+      "family": "custom-21"
+    },
+    {
+      "id": "M001",
+      "category": "multi",
+      "question": "请分别回答两项：给我展示全部历史挂科记录，依照学生编号排列；另外，历史挂科记录一共有几条数据？",
+      "required_groups": [
+        [
+          "E001"
+        ],
+        [
+          "E002"
+        ]
+      ],
+      "family": "pair-history-detail-history-rows"
+    },
+    {
+      "id": "M002",
+      "category": "multi",
+      "question": "请分别回答两项：历史挂科记录去重后有几位学生；另外，帮我找出历史挂科记录中出现的学生学号？",
+      "required_groups": [
+        [
+          "E003"
+        ],
+        [
+          "E004"
+        ]
+      ],
+      "family": "pair-history-students-history-student-list"
+    },
+    {
+      "id": "M003",
+      "category": "multi",
+      "question": "请分别回答两项：汇总历史挂科记录中每名学生的记录行数；另外，找出历史挂科记录中有多行记录的学生学号？",
+      "required_groups": [
+        [
+          "E005"
+        ],
+        [
+          "E006"
+        ]
+      ],
+      "family": "pair-history-per-student-history-multiple"
+    },
+    {
+      "id": "M004",
+      "category": "multi",
+      "question": "请分别回答两项：按学年学期汇总历史挂科记录的数据条数；另外，按学年学期汇总历史挂科记录涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E007"
+        ],
+        [
+          "E008"
+        ]
+      ],
+      "family": "pair-history-group-rows-学年学期-history-group-students-学年学期"
+    },
+    {
+      "id": "M005",
+      "category": "multi",
+      "question": "请分别回答两项：按班级汇总历史挂科记录的数据条数；另外，按班级汇总历史挂科记录涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E009"
+        ],
+        [
+          "E010"
+        ]
+      ],
+      "family": "pair-history-group-rows-班级-history-group-students-班级"
+    },
+    {
+      "id": "M006",
+      "category": "multi",
+      "question": "请分别回答两项：按专业方向汇总历史挂科记录的数据条数；另外，按专业方向汇总历史挂科记录涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E011"
+        ],
+        [
+          "E012"
+        ]
+      ],
+      "family": "pair-history-group-rows-专业方向-history-group-students-专业方向"
+    },
+    {
+      "id": "M007",
+      "category": "multi",
+      "question": "请分别回答两项：按专业汇总历史挂科记录的数据条数；另外，按专业汇总历史挂科记录涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E013"
+        ],
+        [
+          "E014"
+        ]
+      ],
+      "family": "pair-history-group-rows-专业-history-group-students-专业"
+    },
+    {
+      "id": "M008",
+      "category": "multi",
+      "question": "请分别回答两项：按学院汇总历史挂科记录的数据条数；另外，按学院汇总历史挂科记录涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E015"
+        ],
+        [
+          "E016"
+        ]
+      ],
+      "family": "pair-history-group-rows-学院-history-group-students-学院"
+    },
+    {
+      "id": "M009",
+      "category": "multi",
+      "question": "请分别回答两项：按课程号汇总历史挂科记录的数据条数；另外，按课程号汇总历史挂科记录涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E017"
+        ],
+        [
+          "E018"
+        ]
+      ],
+      "family": "pair-history-group-rows-课程号-history-group-students-课程号"
+    },
+    {
+      "id": "M010",
+      "category": "multi",
+      "question": "请分别回答两项：按课程名汇总历史挂科记录的数据条数；另外，按课程名汇总历史挂科记录涉及的不重复的学生数量？",
+      "required_groups": [
+        [
+          "E019"
+        ],
+        [
+          "E020"
+        ]
+      ],
+      "family": "pair-history-group-rows-课程名-history-group-students-课程名"
+    },
+    {
+      "id": "M011",
+      "category": "multi",
+      "question": "请分别回答两项：求一下历史挂科记录的学分均值；另外，求一下历史挂科记录的学分最高值？",
+      "required_groups": [
+        [
+          "E021"
+        ],
+        [
+          "E022"
+        ]
+      ],
+      "family": "pair-history-学分-avg-history-学分-max"
+    },
+    {
+      "id": "M012",
+      "category": "multi",
+      "question": "请分别回答两项：求一下历史挂科记录的学分最低值；另外，帮我找出历史挂科记录中学分高于本表均值的记录？",
+      "required_groups": [
+        [
+          "E023"
+        ],
+        [
+          "E024"
+        ]
+      ],
+      "family": "pair-history-学分-min-history-学分-above-avg"
+    },
+    {
+      "id": "M013",
+      "category": "multi",
+      "question": "请分别回答两项：帮我找出历史挂科记录中分数为空的行；另外，帮我找出历史挂科记录中分数为零的行？",
+      "required_groups": [
+        [
+          "E025"
+        ],
+        [
+          "E026"
+        ]
+      ],
+      "family": "pair-history-score-分数为空-history-score-分数为零"
+    },
+    {
+      "id": "M014",
+      "category": "multi",
+      "question": "请分别回答两项：帮我找出历史挂科记录中数值分数低于60的行；另外，帮我找出历史挂科记录中数值分数达到60的行？",
+      "required_groups": [
+        [
+          "E027"
+        ],
+        [
+          "E028"
+        ]
+      ],
+      "family": "pair-history-score-数值分数低于60-history-score-数值分数达到60"
+    },
+    {
+      "id": "M015",
+      "category": "multi",
+      "question": "请分别回答两项：帮我找出历史挂科记录中数值分数达到90的行；另外，历史挂科记录包含多少门不同课程？",
+      "required_groups": [
+        [
+          "E029"
+        ],
+        [
+          "E030"
+        ]
+      ],
+      "family": "pair-history-score-数值分数达到90-history-course-count"
+    },
+    {
+      "id": "M016",
+      "category": "multi",
+      "question": "请分别回答两项：按学号汇总历史挂科记录中的不同课程数量；另外，找出历史挂科记录中同一学生同一课程出现多次的组合？",
+      "required_groups": [
+        [
+          "E031"
+        ],
+        [
+          "E032"
+        ]
+      ],
+      "family": "pair-history-student-courses-history-repeat-course"
+    },
+    {
+      "id": "M017",
+      "category": "multi",
+      "question": "请分别回答两项：给我展示全部目前仍未通过的记录，依照学生编号排列；另外，目前仍未通过的记录一共有几条数据？",
+      "required_groups": [
+        [
+          "E033"
+        ],
+        [
+          "E034"
+        ]
+      ],
+      "family": "pair-current-detail-current-rows"
+    },
+    {
+      "id": "M018",
+      "category": "multi",
+      "question": "请分别回答两项：帮我找出目前仍未通过的记录中出现的学生学号；另外，汇总目前仍未通过的记录中每名学生的记录行数？",
+      "required_groups": [
+        [
+          "E036"
+        ],
+        [
+          "E037"
+        ]
+      ],
+      "family": "pair-current-student-list-current-per-student"
+    },
+    {
+      "id": "M019",
+      "category": "multi",
+      "question": "请分别回答两项：找出目前仍未通过的记录中有多行记录的学生学号；另外，按院系汇总目前仍未通过的记录的数据条数？",
+      "required_groups": [
+        [
+          "E038"
+        ],
+        [
+          "E039"
+        ]
+      ],
+      "family": "pair-current-multiple-current-group-rows-院系"
+    },
+    {
+      "id": "M020",
+      "category": "multi",
+      "question": "请分别回答两项：按院系汇总目前仍未通过的记录涉及的不重复的学生数量；另外，按专业名汇总目前仍未通过的记录的数据条数？",
+      "required_groups": [
+        [
+          "E040"
+        ],
+        [
+          "E041"
+        ]
+      ],
+      "family": "pair-current-group-students-院系-current-group-rows-专业名"
+    },
+    {
+      "id": "M021",
+      "category": "multi",
+      "question": "请分别回答两项：按专业名汇总目前仍未通过的记录涉及的不重复的学生数量；另外，按专业方向汇总目前仍未通过的记录的数据条数？",
+      "required_groups": [
+        [
+          "E042"
+        ],
+        [
+          "E043"
+        ]
+      ],
+      "family": "pair-current-group-students-专业名-current-group-rows-专业方向"
+    },
+    {
+      "id": "M022",
+      "category": "multi",
+      "question": "请分别回答两项：按专业方向汇总目前仍未通过的记录涉及的不重复的学生数量；另外，按班级号汇总目前仍未通过的记录的数据条数？",
+      "required_groups": [
+        [
+          "E044"
+        ],
+        [
+          "E045"
+        ]
+      ],
+      "family": "pair-current-group-students-专业方向-current-group-rows-班级号"
+    },
+    {
+      "id": "M023",
+      "category": "multi",
+      "question": "请分别回答两项：按班级号汇总目前仍未通过的记录涉及的不重复的学生数量；另外，按班名汇总目前仍未通过的记录的数据条数？",
+      "required_groups": [
+        [
+          "E046"
+        ],
+        [
+          "E047"
+        ]
+      ],
+      "family": "pair-current-group-students-班级号-current-group-rows-班名"
+    },
+    {
+      "id": "M024",
+      "category": "multi",
+      "question": "请分别回答两项：按班名汇总目前仍未通过的记录涉及的不重复的学生数量；另外，按入学年级汇总目前仍未通过的记录的数据条数？",
+      "required_groups": [
+        [
+          "E048"
+        ],
+        [
+          "E049"
+        ]
+      ],
+      "family": "pair-current-group-students-班名-current-group-rows-入学年级"
+    },
+    {
+      "id": "M025",
+      "category": "multi",
+      "question": "请分别回答两项：按入学年级汇总目前仍未通过的记录涉及的不重复的学生数量；另外，按课程名汇总目前仍未通过的记录的数据条数？",
+      "required_groups": [
+        [
+          "E050"
+        ],
+        [
+          "E051"
+        ]
+      ],
+      "family": "pair-current-group-students-入学年级-current-group-rows-课程名"
+    },
+    {
+      "id": "M026",
+      "category": "multi",
+      "question": "请分别回答两项：按课程名汇总目前仍未通过的记录涉及的不重复的学生数量；另外，求一下目前仍未通过的记录的学分均值？",
+      "required_groups": [
+        [
+          "E052"
+        ],
+        [
+          "E053"
+        ]
+      ],
+      "family": "pair-current-group-students-课程名-current-学分-avg"
+    },
+    {
+      "id": "M027",
+      "category": "multi",
+      "question": "请分别回答两项：求一下目前仍未通过的记录的学分最高值；另外，求一下目前仍未通过的记录的学分最低值？",
+      "required_groups": [
+        [
+          "E054"
+        ],
+        [
+          "E055"
+        ]
+      ],
+      "family": "pair-current-学分-max-current-学分-min"
+    },
+    {
+      "id": "M028",
+      "category": "multi",
+      "question": "请分别回答两项：帮我找出目前仍未通过的记录中学分高于本表均值的记录；另外，求一下目前仍未通过的记录的不及格次数均值？",
+      "required_groups": [
+        [
+          "E056"
+        ],
+        [
+          "E057"
+        ]
+      ],
+      "family": "pair-current-学分-above-avg-current-不及格次数-avg"
+    },
+    {
+      "id": "M029",
+      "category": "multi",
+      "question": "请分别回答两项：求一下目前仍未通过的记录的不及格次数最高值；另外，求一下目前仍未通过的记录的不及格次数最低值？",
+      "required_groups": [
+        [
+          "E058"
+        ],
+        [
+          "E059"
+        ]
+      ],
+      "family": "pair-current-不及格次数-max-current-不及格次数-min"
+    },
+    {
+      "id": "M030",
+      "category": "multi",
+      "question": "请分别回答两项：帮我找出目前仍未通过的记录中不及格次数高于本表均值的记录；另外，帮我找出目前仍未通过的记录中分数为空的行？",
+      "required_groups": [
+        [
+          "E060"
+        ],
+        [
+          "E061"
+        ]
+      ],
+      "family": "pair-current-不及格次数-above-avg-current-score-分数为空"
+    },
+    {
+      "id": "M031",
+      "category": "multi",
+      "question": "请分别回答两项：帮我找出目前仍未通过的记录中分数为零的行；另外，帮我找出目前仍未通过的记录中数值分数低于60的行？",
+      "required_groups": [
+        [
+          "E062"
+        ],
+        [
+          "E063"
+        ]
+      ],
+      "family": "pair-current-score-分数为零-current-score-数值分数低于60"
+    },
+    {
+      "id": "M032",
+      "category": "multi",
+      "question": "请分别回答两项：帮我找出目前仍未通过的记录中数值分数达到60的行；另外，帮我找出目前仍未通过的记录中数值分数达到90的行？",
+      "required_groups": [
+        [
+          "E064"
+        ],
+        [
+          "E065"
+        ]
+      ],
+      "family": "pair-current-score-数值分数达到60-current-score-数值分数达到90"
+    },
+    {
+      "id": "M033",
+      "category": "multi",
+      "question": "请分别回答两项：目前仍未通过的记录包含多少门不同课程；另外，按学号汇总目前仍未通过的记录中的不同课程数量？",
+      "required_groups": [
+        [
+          "E066"
+        ],
+        [
+          "E067"
+        ]
+      ],
+      "family": "pair-current-course-count-current-student-courses"
+    },
+    {
+      "id": "M034",
+      "category": "multi",
+      "question": "请分别回答两项：找出目前仍未通过的记录中同一学生同一课程出现多次的组合；另外，给我展示全部逐条考试成绩，依照学生编号排列？",
+      "required_groups": [
+        [
+          "E068"
+        ],
+        [
+          "E069"
+        ]
+      ],
+      "family": "pair-current-repeat-course-detail-detail"
+    },
+    {
+      "id": "M035",
+      "category": "multi",
+      "question": "请分别回答两项：逐条考试成绩一共有几条数据；另外，逐条考试成绩去重后有几位学生？",
+      "required_groups": [
+        [
+          "E070"
+        ],
+        [
+          "E071"
+        ]
+      ],
+      "family": "pair-detail-rows-detail-students"
+    },
+    {
+      "id": "M036",
+      "category": "multi",
+      "question": "请分别回答两项：帮我找出逐条考试成绩中出现的学生学号；另外，汇总逐条考试成绩中每名学生的记录行数？",
+      "required_groups": [
+        [
+          "E072"
+        ],
+        [
+          "E073"
+        ]
+      ],
+      "family": "pair-detail-student-list-detail-per-student"
+    },
+    {
+      "id": "M037",
+      "category": "multi",
+      "question": "请分别回答两项：找出逐条考试成绩中有多行记录的学生学号；另外，按课程号汇总逐条考试成绩的数据条数？",
+      "required_groups": [
+        [
+          "E074"
+        ],
+        [
+          "E075"
+        ]
+      ],
+      "family": "pair-detail-multiple-detail-group-rows-课程号"
+    },
+    {
+      "id": "M038",
+      "category": "multi",
+      "question": "请分别回答两项：按课程号汇总逐条考试成绩涉及的不重复的学生数量；另外，按课序号汇总逐条考试成绩的数据条数？",
+      "required_groups": [
+        [
+          "E076"
+        ],
+        [
+          "E077"
+        ]
+      ],
+      "family": "pair-detail-group-students-课程号-detail-group-rows-课序号"
+    },
+    {
+      "id": "M039",
+      "category": "multi",
+      "question": "请分别回答两项：按课序号汇总逐条考试成绩涉及的不重复的学生数量；另外，按课程名汇总逐条考试成绩的数据条数？",
+      "required_groups": [
+        [
+          "E078"
+        ],
+        [
+          "E079"
+        ]
+      ],
+      "family": "pair-detail-group-students-课序号-detail-group-rows-课程名"
+    },
+    {
+      "id": "M040",
+      "category": "multi",
+      "question": "请分别回答两项：按课程名汇总逐条考试成绩涉及的不重复的学生数量；另外，按考试时间汇总逐条考试成绩的数据条数？",
+      "required_groups": [
+        [
+          "E080"
+        ],
+        [
+          "E081"
+        ]
+      ],
+      "family": "pair-detail-group-students-课程名-detail-group-rows-考试时间"
+    },
+    {
+      "id": "M041",
+      "category": "multi",
+      "question": "请分别回答两项：按考试时间汇总逐条考试成绩涉及的不重复的学生数量；另外，按修读方式汇总逐条考试成绩的数据条数？",
+      "required_groups": [
+        [
+          "E082"
+        ],
+        [
+          "E083"
+        ]
+      ],
+      "family": "pair-detail-group-students-考试时间-detail-group-rows-修读方式"
+    },
+    {
+      "id": "M042",
+      "category": "multi",
+      "question": "请分别回答两项：按修读方式汇总逐条考试成绩涉及的不重复的学生数量；另外，按课程属性汇总逐条考试成绩的数据条数？",
+      "required_groups": [
+        [
+          "E084"
+        ],
+        [
+          "E085"
+        ]
+      ],
+      "family": "pair-detail-group-students-修读方式-detail-group-rows-课程属性"
+    },
+    {
+      "id": "M043",
+      "category": "multi",
+      "question": "请分别回答两项：按课程属性汇总逐条考试成绩涉及的不重复的学生数量；另外，按班级汇总逐条考试成绩的数据条数？",
+      "required_groups": [
+        [
+          "E086"
+        ],
+        [
+          "E087"
+        ]
+      ],
+      "family": "pair-detail-group-students-课程属性-detail-group-rows-班级"
+    },
+    {
+      "id": "M044",
+      "category": "multi",
+      "question": "请分别回答两项：按班级汇总逐条考试成绩涉及的不重复的学生数量；另外，求一下逐条考试成绩的学分均值？",
+      "required_groups": [
+        [
+          "E088"
+        ],
+        [
+          "E089"
+        ]
+      ],
+      "family": "pair-detail-group-students-班级-detail-学分-avg"
+    },
+    {
+      "id": "M045",
+      "category": "multi",
+      "question": "请分别回答两项：求一下逐条考试成绩的学分最高值；另外，求一下逐条考试成绩的学分最低值？",
+      "required_groups": [
+        [
+          "E090"
+        ],
+        [
+          "E091"
+        ]
+      ],
+      "family": "pair-detail-学分-max-detail-学分-min"
+    },
+    {
+      "id": "M046",
+      "category": "multi",
+      "question": "请分别回答两项：帮我找出逐条考试成绩中学分高于本表均值的记录；另外，帮我找出逐条考试成绩中分数为空的行？",
+      "required_groups": [
+        [
+          "E092"
+        ],
+        [
+          "E093"
+        ]
+      ],
+      "family": "pair-detail-学分-above-avg-detail-score-分数为空"
+    },
+    {
+      "id": "M047",
+      "category": "multi",
+      "question": "请分别回答两项：帮我找出逐条考试成绩中分数为零的行；另外，帮我找出逐条考试成绩中数值分数低于60的行？",
+      "required_groups": [
+        [
+          "E094"
+        ],
+        [
+          "E095"
+        ]
+      ],
+      "family": "pair-detail-score-分数为零-detail-score-数值分数低于60"
+    },
+    {
+      "id": "M048",
+      "category": "multi",
+      "question": "请分别回答两项：帮我找出逐条考试成绩中数值分数达到60的行；另外，帮我找出逐条考试成绩中数值分数达到90的行？",
+      "required_groups": [
+        [
+          "E096"
+        ],
+        [
+          "E097"
+        ]
+      ],
+      "family": "pair-detail-score-数值分数达到60-detail-score-数值分数达到90"
+    },
+    {
+      "id": "N001",
+      "category": "negative",
+      "question": "图书馆今天几点关门？",
+      "required_groups": [],
+      "family": "negative-0",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N002",
+      "category": "negative",
+      "question": "学校食堂周末供应早餐吗？",
+      "required_groups": [],
+      "family": "negative-1",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N003",
+      "category": "negative",
+      "question": "如何申请宿舍空调维修？",
+      "required_groups": [],
+      "family": "negative-2",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N004",
+      "category": "negative",
+      "question": "校医院下午有牙科门诊吗？",
+      "required_groups": [],
+      "family": "negative-3",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N005",
+      "category": "negative",
+      "question": "明天去学校是否会下雨？",
+      "required_groups": [],
+      "family": "negative-4",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N006",
+      "category": "negative",
+      "question": "帮我写一段毕业祝福？",
+      "required_groups": [],
+      "family": "negative-5",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N007",
+      "category": "negative",
+      "question": "校园卡丢失后去哪里补办？",
+      "required_groups": [],
+      "family": "negative-6",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N008",
+      "category": "negative",
+      "question": "学校无线网络密码如何修改？",
+      "required_groups": [],
+      "family": "negative-7",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N009",
+      "category": "negative",
+      "question": "怎么预约羽毛球馆？",
+      "required_groups": [],
+      "family": "negative-8",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N010",
+      "category": "negative",
+      "question": "新生报到需要带什么材料？",
+      "required_groups": [],
+      "family": "negative-9",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N011",
+      "category": "negative",
+      "question": "在哪里报名参加志愿活动？",
+      "required_groups": [],
+      "family": "negative-10",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N012",
+      "category": "negative",
+      "question": "校车从东校区几点出发？",
+      "required_groups": [],
+      "family": "negative-11",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N013",
+      "category": "negative",
+      "question": "帮我翻译这段英文通知？",
+      "required_groups": [],
+      "family": "negative-12",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N014",
+      "category": "negative",
+      "question": "推荐一部适合周末看的电影？",
+      "required_groups": [],
+      "family": "negative-13",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N015",
+      "category": "negative",
+      "question": "解释一下快速排序的原理？",
+      "required_groups": [],
+      "family": "negative-14",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N016",
+      "category": "negative",
+      "question": "如何煮一碗番茄鸡蛋面？",
+      "required_groups": [],
+      "family": "negative-15",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N017",
+      "category": "negative",
+      "question": "帮我写一封请假邮件？",
+      "required_groups": [],
+      "family": "negative-16",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N018",
+      "category": "negative",
+      "question": "二十四乘以三十五等于多少？",
+      "required_groups": [],
+      "family": "negative-17",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N019",
+      "category": "negative",
+      "question": "今天人民币兑美元汇率是多少？",
+      "required_groups": [],
+      "family": "negative-18",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N020",
+      "category": "negative",
+      "question": "如何给手机更换壁纸？",
+      "required_groups": [],
+      "family": "negative-19",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N021",
+      "category": "negative",
+      "question": "请介绍杭州的旅游景点？",
+      "required_groups": [],
+      "family": "negative-20",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N022",
+      "category": "negative",
+      "question": "帮我设计一周跑步计划？",
+      "required_groups": [],
+      "family": "negative-21",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N023",
+      "category": "negative",
+      "question": "太阳到地球有多远？",
+      "required_groups": [],
+      "family": "negative-22",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N024",
+      "category": "negative",
+      "question": "解释一下什么是黑洞？",
+      "required_groups": [],
+      "family": "negative-23",
+      "negative_type": "out_of_domain"
+    },
+    {
+      "id": "N025",
+      "category": "negative",
+      "question": "统计每名学生本学期缺勤次数？",
+      "required_groups": [],
+      "family": "negative-24",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N026",
+      "category": "negative",
+      "question": "查询学生图书借阅逾期清单？",
+      "required_groups": [],
+      "family": "negative-25",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N027",
+      "category": "negative",
+      "question": "按宿舍统计本月用电量？",
+      "required_groups": [],
+      "family": "negative-26",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N028",
+      "category": "negative",
+      "question": "查询学生家庭收入和助学金金额？",
+      "required_groups": [],
+      "family": "negative-27",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N029",
+      "category": "negative",
+      "question": "统计每名学生参加社团的活动时长？",
+      "required_groups": [],
+      "family": "negative-28",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N030",
+      "category": "negative",
+      "question": "列出学生心理咨询预约记录？",
+      "required_groups": [],
+      "family": "negative-29",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N031",
+      "category": "negative",
+      "question": "查询每名学生的手机号码？",
+      "required_groups": [],
+      "family": "negative-30",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N032",
+      "category": "negative",
+      "question": "统计校园卡本月餐饮消费总额？",
+      "required_groups": [],
+      "family": "negative-31",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N033",
+      "category": "negative",
+      "question": "查询学生实习企业和实习工资？",
+      "required_groups": [],
+      "family": "negative-32",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N034",
+      "category": "negative",
+      "question": "按课程统计教师课堂评价得分？",
+      "required_groups": [],
+      "family": "negative-33",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N035",
+      "category": "negative",
+      "question": "查询课程授课教师的工资？",
+      "required_groups": [],
+      "family": "negative-34",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N036",
+      "category": "negative",
+      "question": "列出各教室本周空闲时段？",
+      "required_groups": [],
+      "family": "negative-35",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N037",
+      "category": "negative",
+      "question": "查询学生宿舍楼栋和床位号？",
+      "required_groups": [],
+      "family": "negative-36",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N038",
+      "category": "negative",
+      "question": "统计各班学生体测肺活量平均值？",
+      "required_groups": [],
+      "family": "negative-37",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N039",
+      "category": "negative",
+      "question": "查询每名学生的毕业论文导师？",
+      "required_groups": [],
+      "family": "negative-38",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N040",
+      "category": "negative",
+      "question": "列出学生的奖学金实际发放日期？",
+      "required_groups": [],
+      "family": "negative-39",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N041",
+      "category": "negative",
+      "question": "统计学生今年的门禁晚归次数？",
+      "required_groups": [],
+      "family": "negative-40",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N042",
+      "category": "negative",
+      "question": "查询每门课程的教材购买价格？",
+      "required_groups": [],
+      "family": "negative-41",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N043",
+      "category": "negative",
+      "question": "计算学生高考成绩平均分？",
+      "required_groups": [],
+      "family": "negative-42",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N044",
+      "category": "negative",
+      "question": "查询学生在校期间的违纪处分明细？",
+      "required_groups": [],
+      "family": "negative-43",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N045",
+      "category": "negative",
+      "question": "统计实验室仪器维修费用？",
+      "required_groups": [],
+      "family": "negative-44",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N046",
+      "category": "negative",
+      "question": "查询每门课程的上课地点和每周课表？",
+      "required_groups": [],
+      "family": "negative-45",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N047",
+      "category": "negative",
+      "question": "统计学生的就业签约率？",
+      "required_groups": [],
+      "family": "negative-46",
+      "negative_type": "missing_data"
+    },
+    {
+      "id": "N048",
+      "category": "negative",
+      "question": "查询学生请假审批进度？",
+      "required_groups": [],
+      "family": "negative-47",
+      "negative_type": "missing_data"
+    }
+  ]
+}

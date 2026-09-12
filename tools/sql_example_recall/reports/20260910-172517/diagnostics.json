@@ -1,0 +1,14 @@
+{
+  "single_vector_hit_at_k": {
+    "1": 0.705,
+    "3": 0.91,
+    "5": 0.925,
+    "10": 0.945,
+    "20": 0.97
+  },
+  "single_vector_mrr": 0.8062667502107361,
+  "single_missed": 15,
+  "multi_full": 8,
+  "multi_partial": 27,
+  "multi_none": 13
+}

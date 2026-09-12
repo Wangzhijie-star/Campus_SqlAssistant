@@ -1,0 +1,40 @@
+{
+  "version": "campus-v1",
+  "note": "按本地四份成绩表表头设计，定义为评测约定；学校具体计算口径待确认。问题不含真实姓名或学号。",
+  "terms": [
+    {"word": "曾不及格", "other_words": ["历史挂科"], "description": "对应曾不及格课程信息表，表示历史上曾出现不及格的课程记录；不能直接视为当前仍未通过。"},
+    {"word": "尚不及格", "other_words": ["当前挂科"], "description": "对应尚不及格课程信息表，表示报表统计时仍未通过的课程记录，与历史曾不及格区分。"},
+    {"word": "加权学分成绩", "other_words": ["加权成绩"], "description": "对应学生成绩排名表的加权学分成绩字段。此轮直接使用报表值，不推断学校的加权公式。"},
+    {"word": "平均成绩", "other_words": ["平均分"], "description": "对应学生成绩排名表的平均成绩字段，与加权学分成绩区分。此轮使用报表值，不自行重算。"},
+    {"word": "GPA", "other_words": ["平均学分绩点"], "description": "对应学生成绩排名表的GPA字段，直接使用已有值；绩点换算和重修规则需另行确认。"},
+    {"word": "已修课程学分", "other_words": ["已修学分"], "description": "对应学生成绩排名表的已修课程学分字段，与要求总学分和已修自主实践学分区分。"},
+    {"word": "要求总学分", "other_words": ["要求学分"], "description": "对应学生成绩排名表的要求总学分字段，不能用已修课程学分代替。"},
+    {"word": "修读方式", "other_words": ["修读类型"], "description": "对应学生成绩明细表的修读方式字段；具体枚举以原始表为准，不预设枚举值。"}
+  ],
+  "cases": [
+    {"id":"Q01","category":"direct","question":"列出2404班曾不及格的课程。","expected":["曾不及格"]},
+    {"id":"Q02","category":"direct","question":"2404班尚不及格的课程有哪些？","expected":["尚不及格"]},
+    {"id":"Q03","category":"direct","question":"按加权学分成绩从高到低列出前十名。","expected":["加权学分成绩"]},
+    {"id":"Q04","category":"direct","question":"查看2404班的平均成绩。","expected":["平均成绩"]},
+    {"id":"Q05","category":"direct","question":"GPA最高的学生有哪些？","expected":["GPA"]},
+    {"id":"Q06","category":"direct","question":"列出每位同学的已修课程学分。","expected":["已修课程学分"]},
+    {"id":"Q07","category":"direct","question":"每位同学的要求总学分是多少？","expected":["要求总学分"]},
+    {"id":"Q08","category":"direct","question":"按修读方式统计成绩记录数。","expected":["修读方式"]},
+    {"id":"Q09","category":"alias","question":"历史挂科涉及哪些课程？","expected":["曾不及格"]},
+    {"id":"Q10","category":"alias","question":"当前挂科的学生有多少？","expected":["尚不及格"]},
+    {"id":"Q11","category":"alias","question":"列出平均分最高的五位同学。","expected":["平均成绩"]},
+    {"id":"Q12","category":"alias","question":"查看平均学分绩点排名。","expected":["GPA"]},
+    {"id":"Q13","category":"semantic","question":"哪些同学以前有课没考过，后来通过的也算？","expected":["曾不及格"]},
+    {"id":"Q14","category":"semantic","question":"哪些课程到现在还没有通过？","expected":["尚不及格"]},
+    {"id":"Q15","category":"semantic","question":"以前考试没通过的课程都列出来，不论后来是否补过。","expected":["曾不及格"]},
+    {"id":"Q16","category":"semantic","question":"只看目前仍没考过的课，已经补过的不要。","expected":["尚不及格"]},
+    {"id":"Q17","category":"multi","question":"同时列出曾不及格和尚不及格的课程。","expected":["曾不及格","尚不及格"]},
+    {"id":"Q18","category":"multi","question":"比较每位同学的平均成绩和加权学分成绩。","expected":["平均成绩","加权学分成绩"]},
+    {"id":"Q19","category":"multi","question":"列出GPA前十名，再统计尚不及格的人数。","expected":["GPA","尚不及格"]},
+    {"id":"Q20","category":"multi","question":"比较要求总学分和已修课程学分。","expected":["要求总学分","已修课程学分"]},
+    {"id":"Q21","category":"negative","question":"明天会下雨吗？","expected":[]},
+    {"id":"Q22","category":"negative","question":"食堂今天有什么菜？","expected":[]},
+    {"id":"Q23","category":"negative","question":"图书馆几点关门？","expected":[]},
+    {"id":"Q24","category":"negative","question":"校园巴士多久一班？","expected":[]}
+  ]
+}

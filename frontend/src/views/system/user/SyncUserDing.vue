@@ -1,0 +1,507 @@
+<template>
+  <el-dialog v-model="centerDialogVisible" modal-class="sync-user_ding" width="840">
+    <template #header>
+      <div class="dialog-header">
+        <span style="margin-right: 12px">{{ $t(dialogTitle) }}</span>
+        <el-checkbox v-model="isLazy" class="lazy-checkbox">
+          {{ $t('sync.lazy_load') }}
+        </el-checkbox>
+      </div>
+    </template>
+    <div v-loading="loading" class="flex border" style="height: 428px; border-radius: 6px">
+      <div class="p-16 border-r">
+        <el-input
+          v-if="!isLazy"
+          v-model="search"
+          :validate-event="false"
+          :placeholder="$t('datasource.search')"
+          style="width: 364px; margin-left: 16px"
+          clearable
+        >
+          <template #prefix>
+            <el-icon>
+              <Search></Search>
+            </el-icon>
+          </template>
+        </el-input>
+        <div
+          class="max-height_workspace"
+          :class="{ 'mt-8': !isLazy }"
+          :style="isLazy ? { maxHeight: '100%' } : {}"
+        >
+          <el-tree
+            :key="`${treeKey}-${isLazy}`"
+            ref="organizationUserRef"
+            style="max-width: 426px"
+            class="checkbox-group-block"
+            :data="isLazy ? EMPTY_DATA : organizationUserList"
+            :filter-node-method="filterNode"
+            show-checkbox
+            :default-checked-keys="defaultCheckedKeys"
+            :props="defaultProps"
+            node-key="id"
+            :default-expand-all="!isLazy"
+            :expand-on-click-node="false"
+            :lazy="isLazy"
+            :load="isLazy ? loadNode : undefined"
+            @check="handleCheck"
+          >
+            <template #default="{ node, data }">
+              <div class="custom-tree-node flex">
+                <el-icon size="28">
+                  <avatar_organize v-if="!data.options.is_user"></avatar_organize>
+                  <avatar_personal v-else></avatar_personal>
+                </el-icon>
+                <span class="ml-8 ellipsis" style="max-width: 40%" :title="node.label">
+                  {{ node.label }}</span
+                >
+                <span class="account ellipsis ml-8" style="max-width: 40%" :title="data.id"
+                  >({{ data.id }})</span
+                >
+              </div>
+            </template>
+
+            <template #empty>
+              {{ $t(!!search ? 'dashboard.no_data' : 'qa.no_data') }}
+            </template>
+          </el-tree>
+        </div>
+      </div>
+      <div class="p-16 w-full">
+        <div class="flex-between mb-16" style="margin: 0 16px">
+          <span class="lighter">
+            {{ $t('workspace.selected_2_people', { msg: checkTableList.length }) }}
+          </span>
+
+          <el-button text @click="clearWorkspaceAll">
+            {{ $t('workspace.clear') }}
+          </el-button>
+        </div>
+        <div
+          v-for="ele in checkTableList"
+          :key="ele.name"
+          style="margin: 0 16px; position: relative"
+          class="flex-between align-center hover-bg_select"
+        >
+          <div
+            :title="`${ele.name}(${ele.id})`"
+            class="flex align-center ellipsis"
+            style="width: 100%"
+          >
+            <el-icon size="28">
+              <avatar_personal></avatar_personal>
+            </el-icon>
+            <span class="ml-8 lighter ellipsis" style="max-width: 40%" :title="ele.name">{{
+              ele.name
+            }}</span>
+            <span class="account ellipsis ml-8" style="max-width: 40%" :title="ele.id"
+              >({{ ele.id }})</span
+            >
+          </div>
+          <el-button class="close-btn" text>
+            <el-icon size="16" @click="clearWorkspace(ele)"><Close /></el-icon>
+          </el-button>
+        </div>
+      </div>
+    </div>
+
+    <template #footer>
+      <el-checkbox v-model="existingUser" style="float: left">
+        {{ $t('sync.the_existing_user') }}
+      </el-checkbox>
+      <el-button secondary @click="centerDialogVisible = false">
+        {{ $t('common.cancel') }}</el-button
+      >
+      <el-button v-if="!checkTableList.length" disabled type="info">{{
+        $t('common.confirm2')
+      }}</el-button>
+      <el-button v-else type="primary" @click="handleConfirm">
+        {{ $t('common.confirm2') }}
+      </el-button>
+    </template>
+  </el-dialog>
+</template>
+
+<script lang="ts" setup>
+import { modelApi } from '@/api/system'
+import avatar_organize from '@/assets/svg/avatar_organize.svg'
+import avatar_personal from '@/assets/svg/avatar_personal.svg'
+import Close from '@/assets/svg/icon_close_outlined_w.svg'
+import Search from '@/assets/svg/icon_search-outline_outlined.svg'
+import type { CheckboxValueType, FilterNodeMethodFunction } from 'element-plus-secondary'
+import { ElLoading } from 'element-plus-secondary'
+import { cloneDeep } from 'lodash-es'
+import { computed, nextTick, ref, watch } from 'vue'
+const checkAll = ref(false)
+const existingUser = ref(false)
+const isIndeterminate = ref(false)
+const checkedWorkspace = ref<any[]>([])
+const workspace = ref<any[]>([])
+const search = ref('')
+const dialogTitle = ref('')
+const organizationUserRef = ref()
+const defaultCheckedKeys = ref<any[]>([])
+const defaultProps = {
+  children: 'children',
+  label: 'name',
+  isLeaf: (data: any) => data.options?.is_user,
+}
+let rawTree: any = []
+const organizationUserList = ref<any[]>([])
+const loading = ref(false)
+const centerDialogVisible = ref(false)
+const checkTableList = ref([] as any[])
+const EMPTY_DATA: any[] = []
+const isLazy = ref(true)
+const treeKey = ref(0)
+const wecomDeptCache = ref(new Map<string, any[]>())
+
+const workspaceWithKeywords = computed(() => {
+  return workspace.value.filter((ele: any) =>
+    (ele.name.toLowerCase() as string).includes(search.value.toLowerCase())
+  )
+})
+
+const dfsTree = (arr: any) => {
+  return arr.filter((ele: any) => {
+    if (ele.children?.length) {
+      ele.children = dfsTree(ele.children)
+    }
+    if (
+      (ele.name.toLowerCase() as string).includes(search.value.toLowerCase()) ||
+      ele.children?.length
+    ) {
+      return true
+    }
+    return false
+  })
+}
+
+watch(search, () => {
+  organizationUserList.value = dfsTree(cloneDeep(rawTree))
+  nextTick(() => {
+    organizationUserRef.value.setCheckedKeys(checkTableList.value.map((ele: any) => ele.id))
+  })
+})
+
+watch(isLazy, async () => {
+  search.value = ''
+  checkTableList.value = []
+  checkedWorkspace.value = []
+  defaultCheckedKeys.value = []
+  wecomDeptCache.value.clear()
+  loading.value = true
+  const systemWorkspaceList = await modelApi.platform(oid, isLazy.value ? 1 : 0)
+  organizationUserList.value = isLazy.value
+    ? stripDeptChildren(systemWorkspaceList.tree || [])
+    : systemWorkspaceList.tree || []
+  rawTree = cloneDeep(systemWorkspaceList.tree)
+  loading.value = false
+})
+
+const filterNode: FilterNodeMethodFunction = (value: string, data: any) => {
+  if (!value) return true
+  return data.name.includes(value)
+}
+
+function isLeafNode(node: any) {
+  return node.options.is_user
+}
+
+const handleCheck = () => {
+  const checkedKeys = organizationUserRef.value.getCheckedKeys() as any[]
+  const checkNodes = organizationUserRef.value.getCheckedNodes()
+
+  // 只保留仍处于勾选状态的项（无论是否可见、是否懒加载）
+  checkTableList.value = checkTableList.value.filter((ele: any) => checkedKeys.includes(ele.id))
+
+  // 合并当前勾选的叶子节点（按 ID 去重）
+  const userList = [...checkNodes, ...checkTableList.value]
+  let idArr = [...new Set(userList.map((ele: any) => ele.id))]
+
+  checkTableList.value = userList.filter((ele: any) => {
+    if (idArr.includes(ele.id) && isLeafNode(ele)) {
+      idArr = idArr.filter((itx: any) => itx !== ele.id)
+      return true
+    }
+    return false
+  })
+}
+
+const handleCheckedWorkspaceChange = (value: CheckboxValueType[]) => {
+  const checkedCount = value.length
+  checkAll.value = checkedCount === workspaceWithKeywords.value.length
+  isIndeterminate.value = checkedCount > 0 && checkedCount < workspaceWithKeywords.value.length
+  const tableNameArr = workspaceWithKeywords.value.map((ele: any) => ele.name)
+  checkTableList.value = [
+    ...new Set([
+      ...checkTableList.value.filter((ele: any) => !tableNameArr.includes(ele.name)),
+      ...value,
+    ]),
+  ]
+  organizationUserRef.value.setCheckedKeys(checkTableList.value.map((ele: any) => ele.id))
+}
+let oid: any = null
+
+const buildWecomDeptCache = (tree: any[]) => {
+  const cache = new Map<string, any[]>()
+  const stack = [...tree]
+  while (stack.length) {
+    const node = stack.pop()!
+    if (!node.options?.is_user && node.children?.length) {
+      cache.set(
+        node.id,
+        node.children.map((c: any) => ({ ...c, children: [] }))
+      )
+      stack.push(...node.children)
+    }
+  }
+  wecomDeptCache.value = cache
+}
+
+const stripDeptChildren = (nodes: any[]) => {
+  return nodes.map((node: any) => {
+    if (!node.options?.is_user) {
+      const { children, ...rest } = node
+      void children
+      return rest
+    }
+    return { ...node }
+  })
+}
+
+const loadNode = (node: any, resolve: any) => {
+  if (node.level === 0) {
+    modelApi.platform(oid, 1).then((res: any) => {
+      resolve(stripDeptChildren(res.tree || []))
+    })
+    return
+  }
+  if (oid === 6) {
+    const deptChildren = wecomDeptCache.value.get(node.data.id) || []
+    modelApi.platform(oid, 1, node.data.id).then((res: any) => {
+      resolve(stripDeptChildren([...(res.tree || []), ...deptChildren]))
+      nextTick(() => {
+        organizationUserRef.value?.setChecked(node.data.id, false, true)
+      })
+    })
+    return
+  }
+  modelApi.platform(oid, 1, node.data.id).then((res: any) => {
+    resolve(stripDeptChildren(res.tree || []))
+    nextTick(() => {
+      organizationUserRef.value?.setChecked(node.data.id, false, true)
+    })
+  })
+}
+
+const open = async (id: any, title: any) => {
+  isLazy.value = true
+  treeKey.value++
+  dialogTitle.value = title
+  loading.value = true
+  search.value = ''
+  oid = id
+  checkedWorkspace.value = []
+  checkTableList.value = []
+  checkAll.value = false
+  isIndeterminate.value = false
+  const loadingInstance = ElLoading.service({ fullscreen: true })
+  const systemWorkspaceList = await modelApi.platform(id, isLazy.value ? 1 : 0)
+  if (isLazy.value && id === 6) {
+    buildWecomDeptCache(systemWorkspaceList.tree)
+    organizationUserList.value = stripDeptChildren(systemWorkspaceList.tree || [])
+  } else {
+    organizationUserList.value = isLazy.value
+      ? stripDeptChildren(systemWorkspaceList.tree || [])
+      : systemWorkspaceList.tree || []
+  }
+  rawTree = cloneDeep(systemWorkspaceList.tree)
+  loadingInstance?.close()
+  loading.value = false
+  centerDialogVisible.value = true
+}
+const emits = defineEmits(['refresh'])
+const handleConfirm = () => {
+  modelApi
+    .userSync({
+      user_list: checkTableList.value.map((ele: any) => ({
+        id: ele.id,
+        name: ele.name,
+        email: ele.options.email || '',
+      })),
+      origin: oid,
+      cover: existingUser.value,
+    })
+    .then((res: any) => {
+      centerDialogVisible.value = false
+      emits('refresh', res)
+    })
+}
+
+const clearWorkspace = (val: any) => {
+  checkedWorkspace.value = checkedWorkspace.value.filter((ele: any) => ele.id !== val.id)
+  checkTableList.value = checkTableList.value.filter((ele: any) => ele.id !== val.id)
+  handleCheckedWorkspaceChange(checkedWorkspace.value)
+}
+
+const clearWorkspaceAll = () => {
+  checkedWorkspace.value = []
+  checkTableList.value = []
+  handleCheckedWorkspaceChange([])
+}
+
+defineExpose({
+  open,
+})
+</script>
+<style lang="less">
+.sync-user_ding {
+  .dialog-header {
+    display: flex;
+    align-items: center;
+
+    .lazy-checkbox {
+      font-size: 12px;
+      color: #8f959e;
+    }
+  }
+
+  .mb-8 {
+    margin-bottom: 8px;
+  }
+
+  .ed-checkbox {
+    margin-right: 0;
+    position: relative;
+  }
+
+  .hover-bg,
+  .hover-bg_select {
+    &:hover {
+      &::after {
+        content: '';
+        height: 44px;
+        width: calc(100% + 34px);
+        background: #1f23291a;
+        position: absolute;
+        border-radius: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        left: -8px;
+        z-index: 1;
+      }
+    }
+  }
+
+  .hover-bg_select {
+    &:hover {
+      &::after {
+        width: calc(100% + 16px);
+      }
+    }
+  }
+
+  .ed-tree__empty-block {
+    margin-top: 147px;
+    color: #646a73;
+  }
+
+  .mt-16 {
+    margin-top: 16px;
+  }
+
+  .p-16 {
+    padding: 16px 0;
+  }
+
+  .lighter {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 22px;
+  }
+
+  .checkbox-group-block {
+    margin: 0 8px;
+    --ed-tree-node-content-height: 44px;
+  }
+
+  .ed-tree-node__content {
+    border-radius: 6px;
+  }
+
+  .custom-tree-node {
+    width: 82%;
+    align-items: center;
+
+    .account {
+      color: #8f959e;
+    }
+  }
+
+  .close-btn {
+    position: relative;
+    z-index: 10;
+    height: 24px;
+    line-height: 24px;
+    &:hover,
+    &:active,
+    &:focus {
+      background: #1f23291a !important;
+    }
+  }
+
+  .border {
+    border: 1px solid #dee0e3;
+  }
+
+  .w-full {
+    height: 100%;
+    width: 50%;
+    overflow-y: auto;
+
+    .flex-between {
+      height: 44px;
+    }
+  }
+
+  .mt-8 {
+    margin-top: 8px;
+  }
+
+  .max-height_workspace {
+    max-height: calc(100% - 24px);
+    overflow-y: auto;
+  }
+
+  .align-center {
+    align-items: center;
+  }
+
+  .flex-between {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .ml-4 {
+    margin-left: 4px;
+  }
+
+  .ml-8 {
+    margin-left: 8px;
+  }
+
+  .flex {
+    display: flex;
+    .account {
+      color: #8f959e;
+    }
+  }
+
+  .border-r {
+    border-right: 1px solid #dee0e3;
+    width: 50%;
+    overflow: hidden;
+  }
+}
+</style>
