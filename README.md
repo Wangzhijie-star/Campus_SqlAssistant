@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <p align="center"><img src="https://resource-fit2cloud-com.oss-cn-hangzhou.aliyuncs.com/sqlbot/sqlbot.png" alt="SQLBot" width="300" /></p>
 <h3 align="center">基于大模型和 RAG 的智能问数系统</h3>
 
@@ -113,3 +114,7 @@ docker run -d \
 
 - 不能替换和修改 SQLBot 的 Logo 和版权信息；
 - 二次开发后的衍生作品必须遵守 GPL V3 的开源义务。
+=======
+# Campus_SqlAssistant
+聚焦于学生工作中常见的筛选、查询、整理Excel表格中的学生信息以及一些计算，建立的sql查询智能体
+>>>>>>> ff2d179a9fe7b8ca6729ac280cbbc2613c02706f
