@@ -1,0 +1,215 @@
+--- ubuntu/backend/common/core/config.py
++++ merged/backend/common/core/config.py
+@@ -65,6 +65,9 @@
+     ASSISTANT_TOKEN_KEY: str = "X-SQLBOT-ASSISTANT-TOKEN"
+ 
+     CACHE_TYPE: Literal["redis", "memory", "None"] = "memory"
++    # Dedicated connection for request coordination; unset keeps existing deployments compatible.
++    IDEMPOTENCY_REDIS_URL: str | None = None
++    IDEMPOTENCY_REDIS_KEY_PREFIX: str = "sqlbot:local"
+     CACHE_REDIS_URL: str | None = None  # Redis URL, e.g., "redis://[[username]:[password]]@localhost:6379/0"
+ 
+     LOG_LEVEL: str = "INFO"  # DEBUG, INFO, WARNING, ERROR
+--- ubuntu/backend/common/core/idempotency_redis.py
++++ merged/backend/common/core/idempotency_redis.py
+@@ -0,0 +1,59 @@
++"""Connection and key names only; no locking or replay is implemented here."""
++from contextlib import asynccontextmanager
++from dataclasses import dataclass
++import logging
++
++from redis.asyncio import Redis
++
++logger = logging.getLogger(__name__)
++
++
++@dataclass(frozen=True)
++class IdempotencyKeys:
++    prefix: str
++
++    def __post_init__(self):
++        if not self.prefix or self.prefix != self.prefix.strip() or self.prefix.endswith(':'):
++            raise ValueError('Redis key prefix must be nonempty, trimmed and have no trailing colon')
++
++    def request_processing(self, chat_id: int, request_id: str) -> str:
++        if not request_id or request_id != request_id.strip():
++            raise ValueError('request_id must be nonempty and trimmed')
++        return f'{self.prefix}:request:processing:{chat_id}:{request_id}'
++
++    def chat_lock(self, chat_id: int) -> str:
++        return f'{self.prefix}:chat:lock:{chat_id}'
++
++
++@asynccontextmanager
++async def idempotency_redis_lifespan(app, url: str | None, prefix: str):
++    """Create one async client/pool per worker, and close it even if startup fails.
++
++    Use this client on the application event loop, not from LLM worker threads.
++    A configured but unreachable Redis fails startup; there is no memory fallback.
++    """
++    app.state.idempotency_keys = IdempotencyKeys(prefix)
++    app.state.idempotency_redis = None
++    if not url:
++        logger.info('Idempotency Redis not configured; connection initialization skipped')
++        yield
++        return
++
++    client = Redis.from_url(
++        url,
++        decode_responses=True,
++        socket_connect_timeout=3,
++        socket_timeout=3,
++    )
++    try:
++        try:
++            await client.ping()
++        except Exception:
++            # Do not expose a Redis URL that may contain credentials.
++            raise RuntimeError('Idempotency Redis connection failed; check configuration and service') from None
++        app.state.idempotency_redis = client
++        logger.info('Idempotency Redis connected; request locks are not enabled yet')
++        yield
++    finally:
++        app.state.idempotency_redis = None
++        await client.aclose()
+--- ubuntu/backend/main.py
++++ merged/backend/main.py
+@@ -25,6 +25,7 @@
+ from apps.system.schemas.permission import RequestContextMiddleware
+ from common.audit.schemas.request_context import RequestContextMiddlewareCommon
+ from common.core.config import settings
++from common.core.idempotency_redis import idempotency_redis_lifespan
+ from common.core.response_middleware import ResponseMiddleware, exception_handler
+ from common.core.sqlbot_cache import init_sqlbot_cache
+ from common.utils.distributed_lock import SingleWorkerGuard
+@@ -67,21 +68,24 @@
+ # 相关信息准备好
+ @asynccontextmanager
+ async def lifespan(app: FastAPI):
+-    run_migrations()
+-    init_sqlbot_cache()
+-    init_dynamic_cors(app)
+-    init_terminology_embedding_data()
+-    init_data_training_embedding_data()
+-    init_table_and_ds_embedding()
+-    SQLBotLogUtil.info("✅ SQLBot 初始化完成")
+-    await sqlbot_xpack.core.clean_xpack_cache()
+-    await async_model_info()  # 异步加密已有模型的密钥和地址
+-    await sqlbot_xpack.core.monitor_app(app)
+-    try:
+-        yield
+-    finally:
+-        shutdown_resources()
+-        SQLBotLogUtil.info("SQLBot 应用关闭")
++    async with idempotency_redis_lifespan(
++        app, settings.IDEMPOTENCY_REDIS_URL, settings.IDEMPOTENCY_REDIS_KEY_PREFIX
++    ):
++        try:
++            run_migrations()
++            init_sqlbot_cache()
++            init_dynamic_cors(app)
++            init_terminology_embedding_data()
++            init_data_training_embedding_data()
++            init_table_and_ds_embedding()
++            SQLBotLogUtil.info("✅ SQLBot 初始化完成")
++            await sqlbot_xpack.core.clean_xpack_cache()
++            await async_model_info()  # 异步加密已有模型的密钥和地址
++            await sqlbot_xpack.core.monitor_app(app)
++            yield
++        finally:
++            shutdown_resources()
++            SQLBotLogUtil.info("SQLBot 应用关闭")
+ 
+ 
+ def custom_generate_unique_id(route: APIRoute) -> str:
+--- ubuntu/tests/test_idempotency_redis.py
++++ merged/tests/test_idempotency_redis.py
+@@ -0,0 +1,58 @@
++import sys
++import unittest
++from pathlib import Path
++from types import SimpleNamespace
++from unittest.mock import AsyncMock, patch
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'backend'))
++from common.core.idempotency_redis import IdempotencyKeys, idempotency_redis_lifespan
++
++
++class RedisFoundationTests(unittest.IsolatedAsyncioTestCase):
++    def test_keys(self):
++        keys = IdempotencyKeys('sqlbot:local')
++        self.assertEqual(keys.request_processing(1, 'r1'), 'sqlbot:local:request:processing:1:r1')
++        self.assertEqual(keys.chat_lock(1), 'sqlbot:local:chat:lock:1')
++        self.assertNotEqual(keys.request_processing(1, 'r1'), keys.request_processing(1, 'r2'))
++        self.assertNotEqual(keys.chat_lock(1), keys.chat_lock(2))
++        for prefix in ('', ' ', 'sqlbot:local:'):
++            with self.assertRaises(ValueError):
++                IdempotencyKeys(prefix)
++
++    async def test_client_closed_after_success_or_body_failure(self):
++        for fail in (False, True):
++            app = SimpleNamespace(state=SimpleNamespace())
++            client = AsyncMock()
++            with patch('common.core.idempotency_redis.Redis.from_url', return_value=client) as factory:
++                try:
++                    async with idempotency_redis_lifespan(app, 'redis://localhost/1', 'sqlbot:local'):
++                        self.assertIs(app.state.idempotency_redis, client)
++                        if fail:
++                            raise ValueError('later startup failure')
++                except ValueError:
++                    self.assertTrue(fail)
++                client.ping.assert_awaited_once()
++                client.aclose.assert_awaited_once()
++                self.assertIsNone(app.state.idempotency_redis)
++                self.assertEqual(factory.call_args.kwargs['socket_timeout'], 3)
++
++    async def test_connection_failure_closes_client(self):
++        app = SimpleNamespace(state=SimpleNamespace())
++        client = AsyncMock()
++        client.ping.side_effect = ConnectionError('unreachable')
++        with patch('common.core.idempotency_redis.Redis.from_url', return_value=client):
++            with self.assertRaisesRegex(RuntimeError, 'connection failed'):
++                async with idempotency_redis_lifespan(app, 'redis://localhost/1', 'sqlbot:local'):
++                    self.fail('Startup must not continue')
++        client.aclose.assert_awaited_once()
++
++    async def test_unconfigured_skips_connection(self):
++        app = SimpleNamespace(state=SimpleNamespace())
++        with patch('common.core.idempotency_redis.Redis.from_url') as factory:
++            async with idempotency_redis_lifespan(app, None, 'sqlbot:local'):
++                self.assertIsNone(app.state.idempotency_redis)
++            factory.assert_not_called()
++
++
++if __name__ == '__main__':
++    unittest.main()
+--- ubuntu/tests/check_idempotency_redis_connection.py
++++ merged/tests/check_idempotency_redis_connection.py
+@@ -0,0 +1,27 @@
++"""Run from backend/ using its venv. Reads ../.env and sends PING only."""
++import asyncio
++from pathlib import Path
++import sys
++from types import SimpleNamespace
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'backend'))
++from common.core.config import settings
++from common.core.idempotency_redis import idempotency_redis_lifespan
++
++
++async def main():
++    if not settings.IDEMPOTENCY_REDIS_URL:
++        raise RuntimeError('IDEMPOTENCY_REDIS_URL is missing; check ../.env and current directory')
++    app = SimpleNamespace(state=SimpleNamespace())
++    async with idempotency_redis_lifespan(
++        app, settings.IDEMPOTENCY_REDIS_URL, settings.IDEMPOTENCY_REDIS_KEY_PREFIX
++    ):
++        print('Configured Redis connection: OK')
++        print('Request key:', app.state.idempotency_keys.request_processing(1, 'example-request'))
++        print('Chat key:', app.state.idempotency_keys.chat_lock(1))
++    assert app.state.idempotency_redis is None
++    print('Client cleanup: OK; no lock keys written')
++
++
++if __name__ == '__main__':
++    asyncio.run(main())

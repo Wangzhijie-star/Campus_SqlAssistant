@@ -1,0 +1,1448 @@
+--- ubuntu/backend/common/core/question_gate.py
++++ merged/backend/common/core/question_gate.py
+@@ -0,0 +1,215 @@
++"""In-flight request exclusion. Completed-result replay is intentionally separate."""
++import asyncio
++from contextlib import asynccontextmanager
++from contextvars import ContextVar
++from enum import Enum
++import logging
++from math import isfinite
++import time
++from uuid import uuid4
++
++logger = logging.getLogger(__name__)
++active_question_lease = ContextVar('active_question_lease', default=None)
++
++RELEASE = """
++if redis.call('get', KEYS[1]) == ARGV[1] then
++    return redis.call('del', KEYS[1])
++end
++return 0
++"""
++RENEW = """
++for i, key in ipairs(KEYS) do
++    if redis.call('get', key) ~= ARGV[1] then return 0 end
++end
++for i, key in ipairs(KEYS) do redis.call('pexpire', key, ARGV[2]) end
++return 1
++"""
++
++
++class GateState(str, Enum):
++    NEW = 'NEW'
++    PROCESSING = 'PROCESSING'
++    CHAT_BUSY = 'CHAT_BUSY'
++    RUNNING = 'RUNNING'
++    SUCCESS = 'SUCCESS'
++    FAILED = 'FAILED'
++    LOST = 'LOST'
++
++
++class GateRejected(Exception):
++    def __init__(self, code, message, status_code=409):
++        super().__init__(message)
++        self.code, self.status_code = code, status_code
++
++
++class LeaseLostError(RuntimeError):
++    pass
++
++
++class QuestionLease:
++    def __init__(self, gate, keys):
++        self.gate, self.keys = gate, keys
++        self.token = uuid4().hex
++        self.state = GateState.NEW
++        self.deadline = 0.0
++        self.started = time.monotonic()
++        self.renewal = None
++        self.observer = None
++        self.closed = False
++
++    def ensure_active(self):
++        # This check is also called in worker threads; it does no async Redis I/O.
++        if (self.closed or self.state == GateState.LOST or time.monotonic() >= self.deadline
++                or time.monotonic() - self.started >= self.gate.max_runtime):
++            self.state = GateState.LOST
++            raise LeaseLostError('Execution lease lost or task time limit reached')
++
++    async def renew_once(self):
++        self.ensure_active()
++        started = time.monotonic()
++        result = await self.gate.redis.eval(
++            RENEW, len(self.keys), *self.keys, self.token, int(self.gate.ttl * 1000)
++        )
++        # Never revive a locally expired lease, even if a delayed reply says success.
++        self.ensure_active()
++        if not result:
++            raise LeaseLostError('Execution lease is no longer owned by this task')
++        self.deadline = started + self.gate.ttl
++
++    async def _renew(self):
++        try:
++            while True:
++                await asyncio.sleep(self.gate.renew_interval)
++                await self.renew_once()
++        except asyncio.CancelledError:
++            raise
++        except Exception:
++            self.state = GateState.LOST
++            logger.warning('Question lease lost; subsequent execution must stop')
++
++    def follow(self, future, failed):
++        """Transfer cleanup to the real executor future, before the HTTP request returns."""
++        if self.observer is not None:
++            raise RuntimeError('Lease already assigned to a worker')
++        if self.state != GateState.LOST:
++            self.state = GateState.RUNNING
++        self.observer = asyncio.create_task(self._observe(future, failed))
++        self.gate.track(self.observer)
++
++    async def _observe(self, future, failed):
++        completed = False
++        try:
++            await asyncio.shield(asyncio.wrap_future(future))
++            completed = True
++            if self.state != GateState.LOST:
++                self.state = GateState.FAILED if failed() else GateState.SUCCESS
++        except asyncio.CancelledError:
++            if future.done():
++                # A cancelled queued future has no running worker and can be cleaned up.
++                completed = True
++                if self.state != GateState.LOST:
++                    self.state = GateState.FAILED
++            else:
++                # Cancelling an observer does not stop a Python thread. Do not unlock it early.
++                self.state = GateState.LOST
++                raise
++        except Exception:
++            completed = True
++            if self.state != GateState.LOST:
++                self.state = GateState.FAILED
++            logger.exception('Question worker failed')
++        finally:
++            if completed:
++                await self.close()
++            else:
++                await self.stop_renewal()
++
++    async def stop_renewal(self):
++        if self.renewal is not None:
++            self.renewal.cancel()
++            await asyncio.gather(self.renewal, return_exceptions=True)
++            self.renewal = None
++
++    async def close(self):
++        if self.closed:
++            return
++        self.closed = True
++        await self.stop_renewal()
++        # Attempt both releases even if the first fails; TTL remains the fallback.
++        for key in reversed(self.keys):
++            try:
++                await self.gate.redis.eval(RELEASE, 1, key, self.token)
++            except Exception:
++                logger.warning('Question lock release failed; relying on expiry', exc_info=True)
++        self.gate.leases.discard(self)
++
++
++class QuestionGate:
++    def __init__(self, redis, keys, ttl=60, renew_interval=20, max_runtime=600):
++        if (not all(isfinite(value) for value in (ttl, renew_interval, max_runtime))
++                or not 0 < renew_interval < ttl or ttl < 0.001 or max_runtime <= 0):
++            raise ValueError('Require 0 < renewal interval < lease TTL and positive task limit')
++        self.redis, self.keys = redis, keys
++        self.ttl, self.renew_interval, self.max_runtime = ttl, renew_interval, max_runtime
++        self.tasks = set()
++        self.leases = set()
++        self.closing = False
++
++    def track(self, task):
++        self.tasks.add(task)
++        task.add_done_callback(self.tasks.discard)
++
++    async def acquire(self, chat_id, request_id):
++        if self.redis is None or self.closing:
++            raise GateRejected('COORDINATION_UNAVAILABLE', 'Request coordination is unavailable', 503)
++        # Legacy record actions share the chat lock without inventing a request_id.
++        keys = ([self.keys.request_processing(chat_id, request_id)] if request_id else [])
++        keys.append(self.keys.chat_lock(chat_id))
++        lease = QuestionLease(self, keys)
++        started = time.monotonic()
++        try:
++            for index, key in enumerate(keys):
++                acquired = await self.redis.set(key, lease.token, nx=True, px=int(self.ttl * 1000))
++                if not acquired:
++                    code = GateState.PROCESSING if request_id and index == 0 else GateState.CHAT_BUSY
++                    message = ('This request is already processing' if code == GateState.PROCESSING
++                               else 'Another request is running in this chat; please try again when it finishes')
++                    raise GateRejected(code.value, message)
++            lease.deadline = started + self.ttl
++            lease.ensure_active()
++            self.leases.add(lease)
++            lease.renewal = asyncio.create_task(lease._renew())
++            return lease
++        except BaseException as error:
++            # A SET may have succeeded even when its response was lost. Token-checked cleanup is safe.
++            cleanup = asyncio.create_task(lease.close())
++            self.track(cleanup)
++            await asyncio.shield(cleanup)
++            if isinstance(error, (GateRejected, asyncio.CancelledError)):
++                raise
++            raise GateRejected('COORDINATION_UNAVAILABLE', 'Request coordination is unavailable', 503) from None
++
++    @asynccontextmanager
++    async def enter(self, chat_id, request_id):
++        lease = await self.acquire(chat_id, request_id)
++        context_token = active_question_lease.set(lease)
++        try:
++            yield lease
++        finally:
++            active_question_lease.reset(context_token)
++            if lease.observer is None:
++                cleanup = asyncio.create_task(lease.close())
++                self.track(cleanup)
++                await asyncio.shield(cleanup)
++
++    async def shutdown(self):
++        self.closing = True
++        # During application shutdown, revoke execution and stop renewal. A live thread is
++        # not proof of completion: leave its keys to expire instead of deleting them.
++        for lease in list(self.leases):
++            lease.state = GateState.LOST
++            await lease.stop_renewal()
++        pending = list(self.tasks)
++        for task in pending:
++            task.cancel()
++        await asyncio.gather(*pending, return_exceptions=True)
+--- ubuntu/backend/common/core/idempotency_redis.py
++++ merged/backend/common/core/idempotency_redis.py
+@@ -1,9 +1,10 @@
+-"""Connection and key names only; no locking or replay is implemented here."""
++"""Redis connection and application-scoped question coordination."""
+ from contextlib import asynccontextmanager
+ from dataclasses import dataclass
+ import logging
+ 
+ from redis.asyncio import Redis
++from common.core.question_gate import QuestionGate
+ 
+ logger = logging.getLogger(__name__)
+ 
+@@ -26,7 +27,8 @@
+ 
+ 
+ @asynccontextmanager
+-async def idempotency_redis_lifespan(app, url: str | None, prefix: str):
++async def idempotency_redis_lifespan(app, url: str | None, prefix: str,
++                                   ttl=60, renew_interval=20, max_runtime=600):
+     """Create one async client/pool per worker, and close it even if startup fails.
+ 
+     Use this client on the application event loop, not from LLM worker threads.
+@@ -34,6 +36,7 @@
+     """
+     app.state.idempotency_keys = IdempotencyKeys(prefix)
+     app.state.idempotency_redis = None
++    app.state.question_gate = QuestionGate(None, app.state.idempotency_keys, ttl, renew_interval, max_runtime)
+     if not url:
+         logger.info('Idempotency Redis not configured; connection initialization skipped')
+         yield
+@@ -52,8 +55,12 @@
+             # Do not expose a Redis URL that may contain credentials.
+             raise RuntimeError('Idempotency Redis connection failed; check configuration and service') from None
+         app.state.idempotency_redis = client
+-        logger.info('Idempotency Redis connected; request locks are not enabled yet')
++        app.state.question_gate.redis = client
++        logger.info('Idempotency Redis connected; question coordination enabled')
+         yield
+     finally:
+-        app.state.idempotency_redis = None
+-        await client.aclose()
++        try:
++            await app.state.question_gate.shutdown()
++        finally:
++            app.state.idempotency_redis = None
++            await client.aclose()
+--- ubuntu/backend/common/core/config.py
++++ merged/backend/common/core/config.py
+@@ -68,6 +68,9 @@
+     # Dedicated connection for request coordination; unset keeps existing deployments compatible.
+     IDEMPOTENCY_REDIS_URL: str | None = None
+     IDEMPOTENCY_REDIS_KEY_PREFIX: str = "sqlbot:local"
++    IDEMPOTENCY_LOCK_TTL_SECONDS: float = 60
++    IDEMPOTENCY_RENEW_INTERVAL_SECONDS: float = 20
++    IDEMPOTENCY_TASK_MAX_SECONDS: float = 600
+     CACHE_REDIS_URL: str | None = None  # Redis URL, e.g., "redis://[[username]:[password]]@localhost:6379/0"
+ 
+     LOG_LEVEL: str = "INFO"  # DEBUG, INFO, WARNING, ERROR
+--- ubuntu/backend/main.py
++++ merged/backend/main.py
+@@ -69,7 +69,9 @@
+ @asynccontextmanager
+ async def lifespan(app: FastAPI):
+     async with idempotency_redis_lifespan(
+-        app, settings.IDEMPOTENCY_REDIS_URL, settings.IDEMPOTENCY_REDIS_KEY_PREFIX
++        app, settings.IDEMPOTENCY_REDIS_URL, settings.IDEMPOTENCY_REDIS_KEY_PREFIX,
++        settings.IDEMPOTENCY_LOCK_TTL_SECONDS, settings.IDEMPOTENCY_RENEW_INTERVAL_SECONDS,
++        settings.IDEMPOTENCY_TASK_MAX_SECONDS,
+     ):
+         try:
+             run_migrations()
+--- ubuntu/backend/apps/chat/api/chat.py
++++ merged/backend/apps/chat/api/chat.py
+@@ -5,7 +5,7 @@
+ 
+ import orjson
+ import pandas as pd
+-from fastapi import APIRouter, HTTPException, Path
++from fastapi import APIRouter, HTTPException, Path, Request
+ from fastapi.responses import StreamingResponse
+ from sqlalchemy import and_, select
+ from starlette.responses import JSONResponse
+@@ -25,6 +25,8 @@
+ from common.core.deps import CurrentAssistant, SessionDep, CurrentUser, Trans
+ from common.utils.command_utils import parse_quick_command
+ from common.utils.data_format import DataFormat
++from common.core.question_gate import GateRejected
++from apps.system.crud.user import user_ws_list
+ 
+ router = APIRouter(tags=["Data Q&A"], prefix="/chat")
+ 
+@@ -245,10 +247,44 @@
+ @router.post("/question", summary=f"{PLACEHOLDER_PREFIX}ask_question")
+ @require_permissions(permission=SqlbotPermission(type='chat', keyExpression="request_question.chat_id"))
+ async def question_answer(session: SessionDep, current_user: CurrentUser, request_question: ChatQuestionBase,
+-                          current_assistant: CurrentAssistant):
++                          current_assistant: CurrentAssistant, request: Request):
+     question = ChatQuestion(chat_id=request_question.chat_id, question=request_question.question,
+                             request_id=request_question.request_id)
+-    return await question_answer_inner(session, current_user, question, current_assistant, embedding=True)
++    return await guarded_question(request.app.state.question_gate, session, current_user, question,
++                                  current_assistant, embedding=True)
++
++
++async def guarded_question(gate, session, current_user, question, current_assistant=None, **kwargs):
++    # Match the execution layer's workspace checks before exposing lock state or acquiring keys.
++    chat = session.get(Chat, question.chat_id)
++    if not chat:
++        raise HTTPException(status_code=404, detail='Chat not found')
++    if chat.oid:
++        if current_assistant:
++            allowed = chat.oid == current_user.oid
++        else:
++            allowed = chat.oid in [item.id for item in user_ws_list(session, current_user.id)]
++        if not allowed:
++            raise HTTPException(status_code=403, detail='Cannot access this chat')
++    try:
++        async with gate.enter(question.chat_id, question.request_id):
++            return await question_answer_inner(session, current_user, question, current_assistant, **kwargs)
++    except GateRejected as error:
++        return gate_error_response(error, question.request_id)
++
++
++def gate_error_response(error, request_id=None):
++    return JSONResponse(status_code=error.status_code, content={
++        'code': error.code, 'message': str(error), 'request_id': request_id,
++    })
++
++
++def collect_result(llm_service):
++    result = {}
++    for chunk in llm_service.await_result():
++        if chunk:
++            result = chunk
++    return result
+ 
+ 
+ async def question_answer_inner(session: SessionDep, current_user: CurrentUser, request_question: ChatQuestion,
+@@ -371,11 +407,7 @@
+     if stream:
+         return StreamingResponse(llm_service.await_result(), media_type="text/event-stream")
+     else:
+-        res = llm_service.await_result()
+-        raw_data = {}
+-        for chunk in res:
+-            if chunk:
+-                raw_data = chunk
++        raw_data = await asyncio.to_thread(collect_result, llm_service)
+         status_code = 200
+         if not raw_data.get('success'):
+             status_code = 500
+@@ -389,9 +421,20 @@
+ @router.post("/record/{chat_record_id}/{action_type}", summary=f"{PLACEHOLDER_PREFIX}analysis_or_predict")
+ async def analysis_or_predict_question(session: SessionDep, current_user: CurrentUser,
+                                        current_assistant: CurrentAssistant, chat_record_id: int,
++                                       request: Request,
+                                        action_type: str = Path(...,
+                                                                description=f"{PLACEHOLDER_PREFIX}analysis_or_predict_action_type")):
+-    return await analysis_or_predict(session, current_user, chat_record_id, action_type, current_assistant)
++    record = session.get(ChatRecord, chat_record_id)
++    if not record or record.create_by != current_user.id:
++        raise HTTPException(status_code=404, detail='Record not found')
++    chat = session.get(Chat, record.chat_id)
++    if not chat or chat.oid != current_user.oid or chat.create_by != current_user.id:
++        raise HTTPException(status_code=403, detail='Cannot access this chat')
++    try:
++        async with request.app.state.question_gate.enter(record.chat_id, None):
++            return await analysis_or_predict(session, current_user, chat_record_id, action_type, current_assistant)
++    except GateRejected as error:
++        return gate_error_response(error)
+ 
+ 
+ async def analysis_or_predict(session: SessionDep, current_user: CurrentUser, chat_record_id: int, action_type: str,
+@@ -451,11 +494,7 @@
+     if stream:
+         return StreamingResponse(llm_service.await_result(), media_type="text/event-stream")
+     else:
+-        res = llm_service.await_result()
+-        raw_data = {}
+-        for chunk in res:
+-            if chunk:
+-                raw_data = chunk
++        raw_data = await asyncio.to_thread(collect_result, llm_service)
+         status_code = 200
+         if not raw_data.get('success'):
+             status_code = 500
+--- ubuntu/backend/apps/chat/task/llm.py
++++ merged/backend/apps/chat/task/llm.py
+@@ -5,6 +5,7 @@
+ import urllib.parse
+ import warnings
+ from concurrent.futures import ThreadPoolExecutor, Future
++from common.core.question_gate import active_question_lease, LeaseLostError
+ from datetime import datetime
+ from typing import Any, List, Optional, Union, Dict, Iterator
+ 
+@@ -122,6 +123,9 @@
+     def __init__(self, session: Session, current_user: CurrentUser, chat_question: ChatQuestion,
+                  current_assistant: Optional[CurrentAssistant] = None, no_reasoning: bool = False,
+                  embedding: bool = False, config: LLMConfig = None):
++        self.execution_lease = active_question_lease.get()
++        self.execution_failed = False
++        self.ensure_execution()
+         self.sql_message = []
+         self.chart_message = []
+         self.generate_sql_logs = []
+@@ -165,6 +169,7 @@
+                 session.add(chat)
+                 session.flush()
+                 session.refresh(chat)
++                self.ensure_execution()
+                 session.commit()
+ 
+         if chat.datasource:
+@@ -249,6 +254,10 @@
+                 instance.base_message_round_count_limit = count_value
+         return instance
+ 
++    def ensure_execution(self):
++        if self.execution_lease is not None:
++            self.execution_lease.ensure_active()
++
+     def is_running(self, timeout=0.5):
+         try:
+             r = concurrent.futures.wait([self.future], timeout)
+@@ -340,6 +349,7 @@
+                     self.chart_message.append(_msg)
+ 
+     def init_record(self, session: Session) -> ChatRecord:
++        self.ensure_execution()
+         self.record = save_question(session=session, current_user=self.current_user, question=self.chat_question)
+         return self.record
+ 
+@@ -357,6 +367,7 @@
+         return format_chart_fields(chart_info)
+ 
+     def filter_terminology_template(self, _session: Session, oid: int = None, ds_id: int = None):
++        self.ensure_execution()
+         self.current_logs[OperationEnum.FILTER_TERMS] = start_log(session=_session,
+                                                                   operate=OperationEnum.FILTER_TERMS,
+                                                                   record_id=self.record.id, local_operation=True)
+@@ -377,6 +388,7 @@
+                                                                                    calculate_oid,
+                                                                                    calculate_ds_id)
+         #审计日志记录
++        self.ensure_execution()
+         self.current_logs[OperationEnum.FILTER_TERMS] = end_log(session=_session,
+                                                                 log=self.current_logs[OperationEnum.FILTER_TERMS],
+                                                                 full_message=term_list)
+@@ -384,6 +396,7 @@
+     def filter_custom_prompts(self, _session: Session, custom_prompt_type: CustomPromptTypeEnum, oid: int = None,
+                               ds_id: int = None):
+         if SQLBotLicenseUtil.valid():
++            self.ensure_execution()
+             self.current_logs[OperationEnum.FILTER_CUSTOM_PROMPT] = start_log(session=_session,
+                                                                               operate=OperationEnum.FILTER_CUSTOM_PROMPT,
+                                                                               record_id=self.record.id,
+@@ -404,12 +417,14 @@
+                                                                                     custom_prompt_type,
+                                                                                     calculate_oid,
+                                                                                     calculate_ds_id)
++            self.ensure_execution()
+             self.current_logs[OperationEnum.FILTER_CUSTOM_PROMPT] = end_log(session=_session,
+                                                                             log=self.current_logs[
+                                                                                 OperationEnum.FILTER_CUSTOM_PROMPT],
+                                                                             full_message=prompt_list)
+ 
+     def filter_training_template(self, _session: Session, oid: int = None, ds_id: int = None):
++        self.ensure_execution()
+         self.current_logs[OperationEnum.FILTER_SQL_EXAMPLE] = start_log(session=_session,
+                                                                         operate=OperationEnum.FILTER_SQL_EXAMPLE,
+                                                                         record_id=self.record.id,
+@@ -430,12 +445,14 @@
+                                                                                    self.chat_question.question,
+                                                                                    calculate_oid,
+                                                                                    calculate_ds_id)
++        self.ensure_execution()
+         self.current_logs[OperationEnum.FILTER_SQL_EXAMPLE] = end_log(session=_session,
+                                                                       log=self.current_logs[
+                                                                           OperationEnum.FILTER_SQL_EXAMPLE],
+                                                                       full_message=example_list)
+ 
+     def choose_table_schema(self, _session: Session):
++        self.ensure_execution()
+         self.current_logs[OperationEnum.CHOOSE_TABLE] = start_log(session=_session,
+                                                                   operate=OperationEnum.CHOOSE_TABLE,
+                                                                   record_id=self.record.id,
+@@ -455,6 +472,7 @@
+                 ds=self.ds,
+                 table_list=tables)
+ 
++        self.ensure_execution()
+         self.current_logs[OperationEnum.CHOOSE_TABLE] = end_log(session=_session,
+                                                                 log=self.current_logs[OperationEnum.CHOOSE_TABLE],
+                                                                 full_message=self.chat_question.db_schema)
+@@ -476,6 +494,7 @@
+         analysis_msg.append(SystemPromptMessage(content=self.chat_question.analysis_sys_question()))
+         analysis_msg.append(HumanMessage(content=self.chat_question.analysis_user_question()))
+ 
++        self.ensure_execution()
+         self.current_logs[OperationEnum.ANALYSIS] = start_log(session=_session,
+                                                               ai_modal_id=self.chat_question.ai_modal_id,
+                                                               ai_modal_name=self.chat_question.ai_modal_name,
+@@ -491,6 +510,7 @@
+         full_thinking_text = ''
+         full_analysis_text = ''
+         token_usage = {}
++        self.ensure_execution()
+         res = process_stream(self.llm.stream(analysis_msg), token_usage)
+         for chunk in res:
+             if chunk.get('content'):
+@@ -501,6 +521,7 @@
+ 
+         analysis_msg.append(AIMessage(full_analysis_text))
+ 
++        self.ensure_execution()
+         self.current_logs[OperationEnum.ANALYSIS] = end_log(session=_session,
+                                                             log=self.current_logs[
+                                                                 OperationEnum.ANALYSIS],
+@@ -512,6 +533,7 @@
+                                                                 for msg in analysis_msg],
+                                                             reasoning_content=full_thinking_text,
+                                                             token_usage=token_usage)
++        self.ensure_execution()
+         self.record = save_analysis_answer(session=_session, record_id=self.record.id,
+                                            answer=orjson.dumps({'content': full_analysis_text}).decode())
+ 
+@@ -528,6 +550,7 @@
+         predict_msg.append(SystemPromptMessage(content=self.chat_question.predict_sys_question()))
+         predict_msg.append(HumanMessage(content=self.chat_question.predict_user_question()))
+ 
++        self.ensure_execution()
+         self.current_logs[OperationEnum.PREDICT_DATA] = start_log(session=_session,
+                                                                   ai_modal_id=self.chat_question.ai_modal_id,
+                                                                   ai_modal_name=self.chat_question.ai_modal_name,
+@@ -543,6 +566,7 @@
+         full_thinking_text = ''
+         full_predict_text = ''
+         token_usage = {}
++        self.ensure_execution()
+         res = process_stream(self.llm.stream(predict_msg), token_usage)
+         for chunk in res:
+             if chunk.get('content'):
+@@ -552,8 +576,10 @@
+             yield chunk
+ 
+         predict_msg.append(AIMessage(full_predict_text))
++        self.ensure_execution()
+         self.record = save_predict_answer(session=_session, record_id=self.record.id,
+                                           answer=orjson.dumps({'content': full_predict_text}).decode())
++        self.ensure_execution()
+         self.current_logs[OperationEnum.PREDICT_DATA] = end_log(session=_session,
+                                                                 log=self.current_logs[
+                                                                     OperationEnum.PREDICT_DATA],
+@@ -591,6 +617,7 @@
+         guess_msg.append(
+             HumanMessage(content=self.chat_question.guess_user_question(orjson.dumps(old_questions).decode())))
+ 
++        self.ensure_execution()
+         self.current_logs[OperationEnum.GENERATE_RECOMMENDED_QUESTIONS] = start_log(session=_session,
+                                                                                     ai_modal_id=self.chat_question.ai_modal_id,
+                                                                                     ai_modal_name=self.chat_question.ai_modal_name,
+@@ -607,6 +634,7 @@
+         full_thinking_text = ''
+         full_guess_text = ''
+         token_usage = {}
++        self.ensure_execution()
+         res = process_stream(self.llm.stream(guess_msg), token_usage)
+         for chunk in res:
+             if chunk.get('content'):
+@@ -617,6 +645,7 @@
+ 
+         guess_msg.append(AIMessage(full_guess_text))
+ 
++        self.ensure_execution()
+         self.current_logs[OperationEnum.GENERATE_RECOMMENDED_QUESTIONS] = end_log(session=_session,
+                                                                                   log=self.current_logs[
+                                                                                       OperationEnum.GENERATE_RECOMMENDED_QUESTIONS],
+@@ -629,6 +658,7 @@
+                                                                                       for msg in guess_msg],
+                                                                                   reasoning_content=full_thinking_text,
+                                                                                   token_usage=token_usage)
++        self.ensure_execution()
+         self.record = save_recommend_question_answer(session=_session, record_id=self.record.id,
+                                                      answer={'content': full_guess_text},
+                                                      articles_number=self.articles_number)
+@@ -671,6 +701,7 @@
+             datasource_msg.append(
+                 HumanMessage(self.chat_question.datasource_user_question(orjson.dumps(_ds_list_dict).decode())))
+ 
++            self.ensure_execution()
+             self.current_logs[OperationEnum.CHOOSE_DATASOURCE] = start_log(session=_session,
+                                                                            ai_modal_id=self.chat_question.ai_modal_id,
+                                                                            ai_modal_name=self.chat_question.ai_modal_name,
+@@ -685,6 +716,7 @@
+                                                                                          msg in datasource_msg])
+ 
+             token_usage = {}
++            self.ensure_execution()
+             res = process_stream(self.llm.stream(datasource_msg), token_usage)
+             for chunk in res:
+                 if chunk.get('content'):
+@@ -694,6 +726,7 @@
+                 yield chunk
+             datasource_msg.append(AIMessage(full_text))
+ 
++            self.ensure_execution()
+             self.current_logs[OperationEnum.CHOOSE_DATASOURCE] = end_log(session=_session,
+                                                                          log=self.current_logs[
+                                                                              OperationEnum.CHOOSE_DATASOURCE],
+@@ -747,6 +780,7 @@
+                         _session.add(_chat)
+                         _session.flush()
+                         _session.refresh(_chat)
++                        self.ensure_execution()
+                         _session.commit()
+                     except Exception as e:
+                         _session.rollback()
+@@ -761,6 +795,7 @@
+             _error = e
+ 
+         if not ignore_auto_select and not settings.TABLE_EMBEDDING_ENABLED:
++            self.ensure_execution()
+             self.record = save_select_datasource_answer(session=_session, record_id=self.record.id,
+                                                         answer=orjson.dumps({'content': full_text}).decode(),
+                                                         datasource=_datasource,
+@@ -786,6 +821,7 @@
+             self.chat_question.sql_user_question(current_time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                                                  change_title=self.change_title)))
+ 
++        self.ensure_execution()
+         self.current_logs[OperationEnum.GENERATE_SQL] = start_log(session=_session,
+                                                                   ai_modal_id=self.chat_question.ai_modal_id,
+                                                                   ai_modal_name=self.chat_question.ai_modal_name,
+@@ -800,6 +836,7 @@
+         full_thinking_text = ''
+         full_sql_text = ''
+         token_usage = {}
++        self.ensure_execution()
+         res = process_stream(self.llm.stream(self.sql_message), token_usage)
+         for chunk in res:
+             if chunk.get('content'):
+@@ -809,7 +846,8 @@
+             yield chunk
+ 
+         self.sql_message.append(AIMessage(full_sql_text))
+-
++        #current_logs 用户得到这个结果的过程中每一步是怎么跑的
++        self.ensure_execution()
+         self.current_logs[OperationEnum.GENERATE_SQL] = end_log(session=_session,
+                                                                 log=self.current_logs[OperationEnum.GENERATE_SQL],
+                                                                 full_message=[{'type': msg.type,
+@@ -820,6 +858,8 @@
+                                                                               for msg in self.sql_message],
+                                                                 reasoning_content=full_thinking_text,
+                                                                 token_usage=token_usage)
++        #关心这次调用的结果
++        self.ensure_execution()
+         self.record = save_sql_answer(session=_session, record_id=self.record.id,
+                                       answer=orjson.dumps({'content': full_sql_text}).decode())
+ 
+@@ -831,6 +871,7 @@
+         dynamic_sql_msg.append(SystemPromptMessage(content=self.chat_question.dynamic_sys_question()))
+         dynamic_sql_msg.append(HumanMessage(content=self.chat_question.dynamic_user_question()))
+ 
++        self.ensure_execution()
+         self.current_logs[OperationEnum.GENERATE_DYNAMIC_SQL] = start_log(session=session,
+                                                                           ai_modal_id=self.chat_question.ai_modal_id,
+                                                                           ai_modal_name=self.chat_question.ai_modal_name,
+@@ -847,6 +888,7 @@
+         full_thinking_text = ''
+         full_dynamic_text = ''
+         token_usage = {}
++        self.ensure_execution()
+         res = process_stream(self.llm.stream(dynamic_sql_msg), token_usage)
+         for chunk in res:
+             if chunk.get('content'):
+@@ -856,6 +898,7 @@
+ 
+         dynamic_sql_msg.append(AIMessage(full_dynamic_text))
+ 
++        self.ensure_execution()
+         self.current_logs[OperationEnum.GENERATE_DYNAMIC_SQL] = end_log(session=session,
+                                                                         log=self.current_logs[
+                                                                             OperationEnum.GENERATE_DYNAMIC_SQL],
+@@ -895,6 +938,7 @@
+         permission_sql_msg.append(SystemPromptMessage(content=self.chat_question.filter_sys_question()))
+         permission_sql_msg.append(HumanMessage(content=self.chat_question.filter_user_question()))
+ 
++        self.ensure_execution()
+         self.current_logs[OperationEnum.GENERATE_SQL_WITH_PERMISSIONS] = start_log(session=session,
+                                                                                    ai_modal_id=self.chat_question.ai_modal_id,
+                                                                                    ai_modal_name=self.chat_question.ai_modal_name,
+@@ -911,6 +955,7 @@
+         full_thinking_text = ''
+         full_filter_text = ''
+         token_usage = {}
++        self.ensure_execution()
+         res = process_stream(self.llm.stream(permission_sql_msg), token_usage)
+         for chunk in res:
+             if chunk.get('content'):
+@@ -920,6 +965,7 @@
+ 
+         permission_sql_msg.append(AIMessage(full_filter_text))
+ 
++        self.ensure_execution()
+         self.current_logs[OperationEnum.GENERATE_SQL_WITH_PERMISSIONS] = end_log(session=session,
+                                                                                  log=self.current_logs[
+                                                                                      OperationEnum.GENERATE_SQL_WITH_PERMISSIONS],
+@@ -957,6 +1003,7 @@
+         # append current question
+         self.chart_message.append(HumanMessage(self.chat_question.chart_user_question(chart_type, schema)))
+ 
++        self.ensure_execution()
+         self.current_logs[OperationEnum.GENERATE_CHART] = start_log(session=_session,
+                                                                     ai_modal_id=self.chat_question.ai_modal_id,
+                                                                     ai_modal_name=self.chat_question.ai_modal_name,
+@@ -972,6 +1019,7 @@
+         full_thinking_text = ''
+         full_chart_text = ''
+         token_usage = {}
++        self.ensure_execution()
+         res = process_stream(self.llm.stream(self.chart_message), token_usage)
+         for chunk in res:
+             if chunk.get('content'):
+@@ -982,8 +1030,10 @@
+ 
+         self.chart_message.append(AIMessage(full_chart_text))
+ 
++        self.ensure_execution()
+         self.record = save_chart_answer(session=_session, record_id=self.record.id,
+                                         answer=orjson.dumps({'content': full_chart_text}).decode())
++        self.ensure_execution()
+         self.current_logs[OperationEnum.GENERATE_CHART] = end_log(session=_session,
+                                                                   log=self.current_logs[OperationEnum.GENERATE_CHART],
+                                                                   full_message=[
+@@ -1069,6 +1119,7 @@
+ 
+     def check_save_sql(self, session: Session, res: str, operate: OperationEnum) -> str:
+         sql, *_ = self.check_sql(session=session, res=res, operate=operate)
++        self.ensure_execution()
+         save_sql(session=session, sql=sql, record_id=self.record.id)
+ 
+         self.chat_question.sql = sql
+@@ -1132,6 +1183,7 @@
+         if error:
+             raise SingleMessageError(message)
+ 
++        self.ensure_execution()
+         save_chart(session=session, chart=orjson.dumps(chart).decode(), record_id=self.record.id)
+ 
+         return chart
+@@ -1143,6 +1195,7 @@
+         if not json_str:
+             json_str = ''
+ 
++        self.ensure_execution()
+         save_predict_data(session=session, record_id=self.record.id, data=json_str)
+ 
+         if json_str == '':
+@@ -1151,6 +1204,7 @@
+         return True
+ 
+     def save_error(self, session: Session, message: str):
++        self.ensure_execution()
+         return save_error_message(session=session, record_id=self.record.id, message=message)
+ 
+     def save_sql_data(self, session: Session, data_obj: Dict[str, Any]):
+@@ -1165,12 +1219,18 @@
+                 else:
+                     data_obj['data'] = data_result
+                 data_obj['datasource'] = self.ds.id
++            self.ensure_execution()
+             return save_sql_exec_data(session=session, record_id=self.record.id,
+                                       data=orjson.dumps(data_obj).decode())
+         except Exception as e:
+             raise e
+ 
+     def finish(self, session: Session):
++        try:
++            self.ensure_execution()
++        except LeaseLostError:
++            # The stale worker must not publish a completion after losing its lease.
++            return
+         return finish_record(session=session, record_id=self.record.id)
+ 
+     def execute_sql(self, sql: str):
+@@ -1216,14 +1276,42 @@
+ 
+     def run_task_async(self, in_chat: bool = True, stream: bool = True,
+                        finish_step: ChatFinishStep = ChatFinishStep.GENERATE_CHART, return_img: bool = True):
++        self.ensure_execution()
+         if in_chat:
+             stream = True
+         self.future = executor.submit(self.run_task_cache, in_chat, stream, finish_step, return_img)
++        if self.execution_lease is not None:
++            self.execution_lease.follow(self.future, lambda: self.execution_failed)
+ 
+     def run_task_cache(self, in_chat: bool = True, stream: bool = True,
+                        finish_step: ChatFinishStep = ChatFinishStep.GENERATE_CHART, return_img: bool = True):
+-        for chunk in self.run_task(in_chat, stream, finish_step, return_img):
+-            self.chunk_list.append(chunk)
++        self.cache_execution(self.run_task(in_chat, stream, finish_step, return_img), in_chat, stream)
++
++    def cache_execution(self, generator, in_chat, stream):
++        try:
++            while True:
++                self.ensure_execution()
++                try:
++                    chunk = next(generator)
++                except StopIteration:
++                    break
++                self.ensure_execution()
++                self.chunk_list.append(chunk)
++        except LeaseLostError:
++            self.execution_failed = True
++            message = 'Execution stopped because its lease was lost or the task time limit was reached'
++            if in_chat:
++                self.chunk_list.append('data:' + orjson.dumps({
++                    'type': 'error', 'code': 'LEASE_LOST', 'content': message,
++                    'request_id': self.chat_question.request_id,
++                }).decode() + '\n\n')
++            elif stream:
++                self.chunk_list.append('ERROR: ' + message + '\n')
++            else:
++                self.chunk_list.append({'success': False, 'code': 'LEASE_LOST', 'message': message,
++                                        'request_id': self.chat_question.request_id})
++        finally:
++            generator.close()
+ 
+     def run_task(self, in_chat: bool = True, stream: bool = True,
+                  finish_step: ChatFinishStep = ChatFinishStep.GENERATE_CHART, return_img: bool = True):
+@@ -1307,6 +1395,7 @@
+                 if llm_brief_generated or (self.chat_question.question and self.chat_question.question.strip() != ''):
+                     save_brief = llm_brief if (llm_brief and llm_brief != '') else self.chat_question.question.strip()[
+                                                                                    :20]
++                    self.ensure_execution()
+                     brief = rename_chat(session=_session,
+                                         rename_object=RenameChat(id=self.get_record().chat_id,
+                                                                  brief=save_brief, brief_generate=llm_brief_generated))
+@@ -1392,10 +1481,13 @@
+                     yield json_result
+                 return
+ 
++            self.ensure_execution()
+             self.current_logs[OperationEnum.EXECUTE_SQL] = start_log(session=_session,
+                                                                      operate=OperationEnum.EXECUTE_SQL,
+                                                                      record_id=self.record.id, local_operation=True)
++            self.ensure_execution()
+             result = self.execute_sql(sql=real_execute_sql)
++            self.ensure_execution()
+             self.current_logs[OperationEnum.EXECUTE_SQL] = end_log(session=_session,
+                                                                    log=self.current_logs[OperationEnum.EXECUTE_SQL],
+                                                                    full_message={'sql': real_execute_sql,
+@@ -1489,6 +1581,7 @@
+                 try:
+                     if chart.get('type') != 'table' and return_img:
+                         # yield '### generated chart picture\n\n'
++                        self.ensure_execution()
+                         self.current_logs[OperationEnum.GENERATE_PICTURE] = start_log(session=_session,
+                                                                                       operate=OperationEnum.GENERATE_PICTURE,
+                                                                                       record_id=self.record.id,
+@@ -1503,6 +1596,7 @@
+                         if error is not None:
+                             raise error
+ 
++                        self.ensure_execution()
+                         self.current_logs[OperationEnum.GENERATE_PICTURE] = end_log(session=_session,
+                                                                                     log=self.current_logs[
+                                                                                         OperationEnum.GENERATE_PICTURE],
+@@ -1517,6 +1611,7 @@
+                 yield json_result
+ 
+         except Exception as e:
++            self.execution_failed = True
+             traceback.print_exc()
+             error_msg: str
+             if isinstance(e, SingleMessageError):
+@@ -1543,8 +1638,10 @@
+                     json_result['message'] = error_msg
+                     yield json_result
+         finally:
+-            self.finish(_session)
+-            session_maker.remove()
++            try:
++                self.finish(_session)
++            finally:
++                session_maker.remove()
+ 
+     def run_recommend_questions_task_async(self):
+         self.future = executor.submit(self.run_recommend_questions_task_cache)
+@@ -1574,12 +1671,14 @@
+ 
+     def run_analysis_or_predict_task_async(self, session: Session, action_type: str, base_record: ChatRecord,
+                                            in_chat: bool = True, stream: bool = True):
++        self.ensure_execution()
+         self.set_record(save_analysis_predict_record(session, base_record, action_type))
+         self.future = executor.submit(self.run_analysis_or_predict_task_cache, action_type, in_chat, stream)
++        if self.execution_lease is not None:
++            self.execution_lease.follow(self.future, lambda: self.execution_failed)
+ 
+     def run_analysis_or_predict_task_cache(self, action_type: str, in_chat: bool = True, stream: bool = True):
+-        for chunk in self.run_analysis_or_predict_task(action_type, in_chat, stream):
+-            self.chunk_list.append(chunk)
++        self.cache_execution(self.run_analysis_or_predict_task(action_type, in_chat, stream), in_chat, stream)
+ 
+     def run_analysis_or_predict_task(self, action_type: str, in_chat: bool = True, stream: bool = True):
+         json_result: Dict[str, Any] = {'success': True, 'request_id': self.chat_question.request_id}
+@@ -1697,6 +1796,7 @@
+             if not stream:
+                 yield json_result
+         except Exception as e:
++            self.execution_failed = True
+             traceback.print_exc()
+             error_msg: str
+             if isinstance(e, SingleMessageError):
+--- ubuntu/backend/apps/mcp/mcp.py
++++ merged/backend/apps/mcp/mcp.py
+@@ -5,13 +5,13 @@
+ from typing import Optional
+ 
+ import jwt
+-from fastapi import HTTPException, status, APIRouter
++from fastapi import HTTPException, status, APIRouter, Request
+ # from fastapi.security import OAuth2PasswordBearer
+ from jwt.exceptions import InvalidTokenError
+ from pydantic import ValidationError
+ from sqlmodel import select
+ 
+-from apps.chat.api.chat import create_chat, question_answer_inner
++from apps.chat.api.chat import create_chat, question_answer_inner, guarded_question
+ from apps.chat.models.chat_model import ChatMcp, CreateChat, ChatStart, McpQuestion, McpAssistant, ChatQuestion, \
+     ChatFinishStep, McpDs, ChatToken
+ from apps.datasource.crud.datasource import get_datasource_list
+@@ -164,7 +164,7 @@
+ 
+ 
+ @router.post("/mcp_question", operation_id="mcp_question")
+-async def mcp_question(session: SessionDep, trans: Trans, chat: McpQuestion):
++async def mcp_question(session: SessionDep, trans: Trans, chat: McpQuestion, request: Request):
+     session_user = get_user(session, chat.token)
+     lang = chat.lang
+     if lang in ["zh-CN", "zh-TW", "en", "ko-KR"]:
+@@ -194,8 +194,8 @@
+     mcp_chat = ChatMcp(token=chat.token, chat_id=chat.chat_id, question=chat.question,
+                        datasource_id=ds_id, request_id=chat.request_id)
+ 
+-    return await question_answer_inner(session=session, current_user=session_user, request_question=mcp_chat,
+-                                       in_chat=False, stream=chat.stream, return_img=chat.return_img)
++    return await guarded_question(request.app.state.question_gate, session, session_user, mcp_chat,
++                                  in_chat=False, stream=chat.stream, return_img=chat.return_img)
+ 
+ 
+ # Cordys crm
+--- ubuntu/frontend/src/views/chat/index.vue
++++ merged/frontend/src/views/chat/index.vue
+@@ -236,6 +236,7 @@
+                     @scroll-bottom="scrollToBottom"
+                     @finish="onChartAnswerFinish"
+                     @error="onChartAnswerError"
++                    @request-rejected="onQuestionRejected"
+                     @stop="onChatStop"
+                   >
+                     <ErrorInfo :error="message.record?.error" class="error-container" />
+@@ -791,6 +792,12 @@
+   getRecordUsage(id)
+ }
+ 
++function onQuestionRejected(code: string, question?: string) {
++  if (code === 'CHAT_BUSY' && !inputMessage.value.trim() && question) {
++    inputMessage.value = question
++  }
++}
++
+ function onChatStop() {
+   loading.value = false
+   isTyping.value = false
+--- ubuntu/frontend/src/views/chat/answer/ChartAnswer.vue
++++ merged/frontend/src/views/chat/answer/ChartAnswer.vue
+@@ -27,6 +27,7 @@
+ )
+ 
+ const emits = defineEmits([
++  'request-rejected',
+   'finish',
+   'error',
+   'stop',
+@@ -111,7 +112,17 @@
+     }
+     const response = await questionApi.add(param, controller)
+     if (!response.ok) {
+-      throw new Error(`HTTP ${response.status}: ${await response.text()}`)
++      const text = await response.text()
++      let payload: { code?: string; message?: string } = {}
++      try {
++        payload = JSON.parse(text)
++      } catch {
++        // Non-JSON gateway errors still retain their original HTTP status.
++      }
++      if (payload.code === 'CHAT_BUSY' || payload.code === 'PROCESSING') {
++        emits('request-rejected', payload.code, currentRecord.question)
++      }
++      throw new Error(payload.message || `HTTP ${response.status}: ${text}`)
+     }
+     const reader = response.body.getReader()
+     const decoder = new TextDecoder('utf-8')
+--- ubuntu/frontend/src/views/chat/answer/AnalysisAnswer.vue
++++ merged/frontend/src/views/chat/answer/AnalysisAnswer.vue
+@@ -97,6 +97,16 @@
+   try {
+     const controller: AbortController = new AbortController()
+     const response = await chatApi.analysis(currentRecord.analysis_record_id, controller)
++    if (!response.ok) {
++      const body = await response.text()
++      let message = body
++      try {
++        message = JSON.parse(body).message || body
++      } catch {
++        // Preserve non-JSON HTTP errors.
++      }
++      throw new Error(message || `HTTP ${response.status}`)
++    }
+     const reader = response.body.getReader()
+     const decoder = new TextDecoder('utf-8')
+ 
+--- ubuntu/frontend/src/views/chat/answer/PredictAnswer.vue
++++ merged/frontend/src/views/chat/answer/PredictAnswer.vue
+@@ -102,6 +102,16 @@
+   try {
+     const controller: AbortController = new AbortController()
+     const response = await chatApi.predict(currentRecord.predict_record_id, controller)
++    if (!response.ok) {
++      const body = await response.text()
++      let message = body
++      try {
++        message = JSON.parse(body).message || body
++      } catch {
++        // Preserve non-JSON HTTP errors.
++      }
++      throw new Error(message || `HTTP ${response.status}`)
++    }
+     const reader = response.body.getReader()
+     const decoder = new TextDecoder('utf-8')
+ 
+--- ubuntu/tests/test_question_request.py
++++ merged/tests/test_question_request.py
+@@ -51,11 +51,12 @@
+             with self.subTest(question=text):
+                 inner = AsyncMock(return_value='response')
+                 handler = load_function('backend/apps/chat/api/chat.py', 'question_answer',
+-                                        {'ChatQuestion': SimpleNamespace, 'question_answer_inner': inner})
++                                        {'ChatQuestion': SimpleNamespace, 'guarded_question': inner})
+                 payload = ChatQuestionBase(chat_id=1, question=text, request_id='operation-1')
+-                result = asyncio.run(handler(None, None, payload, None))
++                request = SimpleNamespace(app=SimpleNamespace(state=SimpleNamespace(question_gate=object())))
++                result = asyncio.run(handler(None, None, payload, None, request))
+                 self.assertEqual(result, 'response')
+-                forwarded = inner.call_args.args[2]
++                forwarded = inner.call_args.args[3]
+                 self.assertEqual(forwarded.request_id, payload.request_id)
+                 self.assertEqual(forwarded.question, text)
+                 self.assertEqual(forwarded.chat_id, payload.chat_id)
+--- ubuntu/tests/test_question_gate.py
++++ merged/tests/test_question_gate.py
+@@ -0,0 +1,201 @@
++"""Ownership, concurrency, cancellation and worker-lifetime tests without model/DB calls."""
++import asyncio
++from concurrent.futures import Future
++from pathlib import Path
++import sys
++import time
++import unittest
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'backend'))
++from common.core.idempotency_redis import IdempotencyKeys
++from common.core.question_gate import QuestionGate, GateRejected, GateState, LeaseLostError, RELEASE, RENEW
++
++
++class MemoryRedis:
++    def __init__(self):
++        self.values = {}
++        self.expiries = {}
++        self.release_calls = []
++        self.fail_release = set()
++        self.fail_renew = False
++        self.cancel_set = False
++
++    async def set(self, key, value, nx, px):
++        if key in self.values:
++            return False
++        self.values[key] = value
++        self.expiries[key] = time.monotonic() + px / 1000
++        if self.cancel_set:
++            raise asyncio.CancelledError()
++        return True
++
++    async def eval(self, script, numkeys, *args):
++        keys, token = args[:numkeys], args[numkeys]
++        if script == RELEASE:
++            self.release_calls.append(keys[0])
++            if keys[0] in self.fail_release:
++                raise ConnectionError('simulated release failure')
++            if self.values.get(keys[0]) == token:
++                del self.values[keys[0]]
++                self.expiries.pop(keys[0], None)
++                return 1
++            return 0
++        if script == RENEW:
++            if self.fail_renew:
++                raise ConnectionError('simulated renewal failure')
++            if any(self.values.get(key) != token for key in keys):
++                return 0
++            for key in keys:
++                self.expiries[key] = time.monotonic() + int(args[numkeys + 1]) / 1000
++            return 1
++        raise AssertionError('Unexpected Lua script')
++
++
++class QuestionGateTests(unittest.IsolatedAsyncioTestCase):
++    async def asyncSetUp(self):
++        self.redis = MemoryRedis()
++        self.keys = IdempotencyKeys('sqlbot:test')
++        self.gate = QuestionGate(self.redis, self.keys)
++
++    async def asyncTearDown(self):
++        await self.gate.shutdown()
++
++    async def test_duplicate_request_and_chat_busy(self):
++        first = await self.gate.acquire(1, 'r1')
++        for request_id, code in [('r1', 'PROCESSING'), ('r2', 'CHAT_BUSY')]:
++            with self.assertRaises(GateRejected) as caught:
++                await self.gate.acquire(1, request_id)
++            self.assertEqual(caught.exception.code, code)
++        self.assertNotIn(self.keys.request_processing(1, 'r2'), self.redis.values)
++        self.assertEqual(self.redis.values[self.keys.chat_lock(1)], first.token)
++        await first.close()
++        self.assertEqual(self.redis.values, {})
++
++    async def test_concurrent_different_requests_have_one_winner(self):
++        results = await asyncio.gather(*(self.gate.acquire(1, f'r{i}') for i in range(20)),
++                                       return_exceptions=True)
++        winners = [result for result in results if not isinstance(result, BaseException)]
++        self.assertEqual(len(winners), 1)
++        self.assertEqual(len(self.redis.values), 2)
++        await winners[0].close()
++
++    async def test_different_chats_can_execute(self):
++        one, two = await asyncio.gather(self.gate.acquire(1, 'r1'), self.gate.acquire(2, 'r1'))
++        self.assertNotEqual(one.token, two.token)
++        await one.close()
++        await two.close()
++
++    async def test_legacy_action_uses_only_chat_lock(self):
++        one = await self.gate.acquire(1, None)
++        self.assertEqual(one.keys, [self.keys.chat_lock(1)])
++        with self.assertRaises(GateRejected) as error:
++            await self.gate.acquire(1, 'r1')
++        self.assertEqual(error.exception.code, 'CHAT_BUSY')
++        await one.close()
++
++    async def test_renew_both_and_old_owner_cannot_renew_or_release(self):
++        lease = await self.gate.acquire(1, 'r1')
++        before = self.redis.expiries.copy()
++        await lease.renew_once()
++        self.assertTrue(all(self.redis.expiries[key] >= before[key] for key in lease.keys))
++        self.redis.values[lease.keys[-1]] = 'replacement-owner'
++        before = self.redis.expiries.copy()
++        with self.assertRaises(LeaseLostError):
++            await lease.renew_once()
++        self.assertEqual(before, self.redis.expiries)
++        await lease.close()
++        self.assertEqual(self.redis.values[lease.keys[-1]], 'replacement-owner')
++
++    async def test_cancelled_acquisition_cleans_ambiguous_write(self):
++        self.redis.cancel_set = True
++        with self.assertRaises(asyncio.CancelledError):
++            await self.gate.acquire(1, 'r1')
++        self.assertEqual(self.redis.values, {})
++
++    async def test_submission_failure_releases(self):
++        with self.assertRaises(RuntimeError):
++            async with self.gate.enter(1, 'r1'):
++                raise RuntimeError('executor submission failed')
++        self.assertEqual(self.redis.values, {})
++
++    async def test_http_exit_does_not_release_running_worker(self):
++        future = Future()
++        async with self.gate.enter(1, 'r1') as lease:
++            lease.follow(future, lambda: False)
++        self.assertEqual(len(self.redis.values), 2)
++        self.assertFalse(lease.closed)
++        future.set_result(None)
++        await lease.observer
++        self.assertEqual(lease.state, GateState.SUCCESS)
++        self.assertEqual(self.redis.values, {})
++
++    async def test_http_cancellation_does_not_cancel_worker_or_release(self):
++        future = Future()
++        with self.assertRaises(asyncio.CancelledError):
++            async with self.gate.enter(1, 'r1') as lease:
++                lease.follow(future, lambda: False)
++                raise asyncio.CancelledError()
++        self.assertFalse(future.cancelled())
++        self.assertEqual(len(self.redis.values), 2)
++        future.set_result(None)
++        await lease.observer
++        self.assertEqual(self.redis.values, {})
++
++    async def test_worker_error_releases_both(self):
++        future = Future()
++        async with self.gate.enter(1, 'r1') as lease:
++            lease.follow(future, lambda: False)
++        future.set_exception(ValueError('model failed'))
++        with self.assertLogs('common.core.question_gate', level='ERROR'):
++            await lease.observer
++        self.assertEqual(lease.state, GateState.FAILED)
++        self.assertEqual(self.redis.values, {})
++
++    async def test_cancelled_queued_future_releases_both(self):
++        future = Future()
++        async with self.gate.enter(1, 'r1') as lease:
++            lease.follow(future, lambda: False)
++        future.cancel()
++        await lease.observer
++        self.assertEqual(lease.state, GateState.FAILED)
++        self.assertEqual(self.redis.values, {})
++
++    async def test_release_failure_still_attempts_other_key(self):
++        lease = await self.gate.acquire(1, 'r1')
++        self.redis.fail_release.add(lease.keys[-1])
++        with self.assertLogs('common.core.question_gate', level='WARNING'):
++            await lease.close()
++        self.assertNotIn(lease.keys[0], self.redis.values)
++        self.assertEqual(self.redis.release_calls, list(reversed(lease.keys)))
++
++    async def test_lost_renewal_stops_advancement(self):
++        self.gate.renew_interval = 0.005
++        self.redis.fail_renew = True
++        lease = await self.gate.acquire(1, 'r1')
++        with self.assertLogs('common.core.question_gate', level='WARNING'):
++            await asyncio.wait_for(lease.renewal, timeout=1)
++        with self.assertRaises(LeaseLostError):
++            lease.ensure_active()
++        await lease.close()
++
++    async def test_local_expiry_and_task_limit(self):
++        for expire_task in (False, True):
++            lease = await self.gate.acquire(1, 'r1')
++            if expire_task:
++                lease.started -= 601
++            else:
++                lease.deadline = time.monotonic() - 1
++            with self.assertRaises(LeaseLostError):
++                lease.ensure_active()
++            await lease.close()
++
++    async def test_missing_redis_is_not_processing(self):
++        self.gate.redis = None
++        with self.assertRaises(GateRejected) as error:
++            await self.gate.acquire(1, 'r1')
++        self.assertEqual(error.exception.status_code, 503)
++        self.assertEqual(error.exception.code, 'COORDINATION_UNAVAILABLE')
++
++
++if __name__ == '__main__':
++    unittest.main()
+--- ubuntu/tests/test_question_gate_routes.py
++++ merged/tests/test_question_gate_routes.py
+@@ -0,0 +1,86 @@
++"""Execute actual API function bodies with isolated model/DB dependencies."""
++import asyncio
++from concurrent.futures import Future
++import json
++from types import SimpleNamespace
++import unittest
++from unittest.mock import AsyncMock, MagicMock
++
++from fastapi import HTTPException
++from starlette.responses import JSONResponse, StreamingResponse
++
++from test_question_request import load_function
++from test_question_gate import MemoryRedis
++from common.core.idempotency_redis import IdempotencyKeys
++from common.core.question_gate import QuestionGate, GateRejected, active_question_lease
++
++
++class RouteGateTests(unittest.IsolatedAsyncioTestCase):
++    async def asyncSetUp(self):
++        self.gate = QuestionGate(MemoryRedis(), IdempotencyKeys('test:route'))
++        self.worker = Future()
++        self.service = MagicMock()
++        self.service.init_record.side_effect = lambda **kwargs: None
++
++        def submit(**kwargs):
++            active_question_lease.get().follow(self.worker, lambda: False)
++        self.service.run_task_async.side_effect = submit
++        self.service.await_result.return_value = iter(())
++        self.creator = AsyncMock(return_value=self.service)
++        namespace = {
++            'asyncio': asyncio, 'HTTPException': HTTPException, 'JSONResponse': JSONResponse,
++            'StreamingResponse': StreamingResponse, 'GateRejected': GateRejected,
++            'Chat': object, 'user_ws_list': lambda *args: [SimpleNamespace(id=1)],
++            'ChatFinishStep': SimpleNamespace(GENERATE_CHART=3),
++            'LLMService': SimpleNamespace(create=self.creator),
++            'traceback': MagicMock(),
++            'orjson': SimpleNamespace(dumps=lambda value: json.dumps(value).encode()),
++        }
++        for name in ('gate_error_response', 'collect_result', 'stream_sql'):
++            load_function('backend/apps/chat/api/chat.py', name, namespace)
++        namespace['question_answer_inner'] = namespace['stream_sql']
++        self.handler = load_function('backend/apps/chat/api/chat.py', 'guarded_question', namespace)
++        self.session = SimpleNamespace(get=lambda *args: SimpleNamespace(oid=1))
++        self.user = SimpleNamespace(id=1, oid=1)
++        self.question = SimpleNamespace(chat_id=1, request_id='r1')
++
++    async def asyncTearDown(self):
++        if not self.worker.done():
++            self.worker.set_result(None)
++        await asyncio.gather(*list(self.gate.tasks), return_exceptions=True)
++        await self.gate.shutdown()
++
++    async def test_response_returns_with_locks_until_worker_finishes(self):
++        response = await self.handler(self.gate, self.session, self.user, self.question)
++        self.assertIsInstance(response, StreamingResponse)
++        self.assertEqual(len(self.gate.redis.values), 2)
++        self.service.init_record.assert_called_once()
++        self.worker.set_result(None)
++        await asyncio.gather(*list(self.gate.tasks))
++        self.assertEqual(self.gate.redis.values, {})
++
++    async def test_busy_rejected_before_service_or_record_creation(self):
++        async with self.gate.enter(1, 'other'):
++            response = await self.handler(self.gate, self.session, self.user, self.question)
++            self.assertEqual(response.status_code, 409)
++            self.assertEqual(json.loads(response.body)['code'], 'CHAT_BUSY')
++            self.creator.assert_not_called()
++        self.assertEqual(self.gate.redis.values, {})
++
++    async def test_submission_failure_cleans_locks(self):
++        self.service.run_task_async.side_effect = RuntimeError('submission failed')
++        response = await self.handler(self.gate, self.session, self.user, self.question, stream=False)
++        self.assertEqual(response.status_code, 500)
++        self.assertEqual(self.gate.redis.values, {})
++
++    async def test_permission_denied_before_redis(self):
++        self.session.get = lambda *args: SimpleNamespace(oid=99)
++        with self.assertRaises(HTTPException) as error:
++            await self.handler(self.gate, self.session, self.user, self.question)
++        self.assertEqual(error.exception.status_code, 403)
++        self.assertEqual(self.gate.redis.values, {})
++        self.creator.assert_not_called()
++
++
++if __name__ == '__main__':
++    unittest.main()
+--- ubuntu/tests/check_question_gate_redis.py
++++ merged/tests/check_question_gate_redis.py
+@@ -0,0 +1,70 @@
++"""Real Redis integration check using a unique test namespace, no database/model calls."""
++import asyncio
++from concurrent.futures import Future
++from pathlib import Path
++import sys
++from uuid import uuid4
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'backend'))
++from redis.asyncio import Redis
++from common.core.config import settings
++from common.core.idempotency_redis import IdempotencyKeys
++from common.core.question_gate import QuestionGate, GateRejected, LeaseLostError
++
++
++async def main():
++    if not settings.IDEMPOTENCY_REDIS_URL:
++        raise RuntimeError('Configure IDEMPOTENCY_REDIS_URL first; run from backend/')
++    redis = Redis.from_url(settings.IDEMPOTENCY_REDIS_URL, decode_responses=True,
++                           socket_connect_timeout=3, socket_timeout=3)
++    keys = IdempotencyKeys('sqlbot:test:question-gate:' + uuid4().hex)
++    gate = QuestionGate(redis, keys, ttl=0.6, renew_interval=0.1, max_runtime=10)
++    touched = [keys.request_processing(1, f'r{i}') for i in range(12)] + [keys.chat_lock(1)]
++    try:
++        results = await asyncio.gather(*(gate.acquire(1, f'r{i}') for i in range(12)), return_exceptions=True)
++        winners = [result for result in results if not isinstance(result, BaseException)]
++        assert len(winners) == 1, results
++        assert all(isinstance(result, GateRejected) and result.code == 'CHAT_BUSY'
++                   for result in results if isinstance(result, BaseException)), results
++        lease = winners[0]
++        print('Concurrent chat lock and losing-request cleanup: OK')
++        assert sum(value is not None for value in await redis.mget(touched)) == 2
++        try:
++            await gate.acquire(1, lease.keys[0].rsplit(':', 1)[1])
++            raise AssertionError('Duplicate request acquired a lock')
++        except GateRejected as error:
++            assert error.code == 'PROCESSING'
++        print('Duplicate request returns PROCESSING: OK')
++        await asyncio.sleep(0.8)
++        assert all(await redis.mget(lease.keys))
++        print('Automatic renewal outlives initial lease: OK')
++        await lease.stop_renewal()
++        await redis.set(lease.keys[-1], 'replacement-owner', px=3000)
++        try:
++            await lease.renew_once()
++            raise AssertionError('Old owner renewed replacement lock')
++        except LeaseLostError:
++            pass
++        await lease.close()
++        assert await redis.get(lease.keys[-1]) == 'replacement-owner'
++        print('Old owner cannot renew/delete replacement lock: OK')
++        await redis.delete(lease.keys[-1])  # This script's own isolated test key only.
++        future = Future()
++        async with gate.enter(1, 'r0') as lease:
++            lease.follow(future, lambda: False)
++        assert all(await redis.mget(lease.keys))
++        future.set_result(None)
++        await lease.observer
++        assert not any(await redis.mget(lease.keys))
++        print('HTTP return retains locks; actual task completion releases them: OK')
++    finally:
++        for lease in list(gate.leases):
++            await lease.close()
++        await gate.shutdown()
++        await redis.delete(*touched)
++        await redis.aclose()
++    print('Unique test keys cleaned up')
++
++
++if __name__ == '__main__':
++    asyncio.run(main())

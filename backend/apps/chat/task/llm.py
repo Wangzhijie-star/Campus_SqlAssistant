@@ -5,6 +5,7 @@ import traceback
 import urllib.parse
 import warnings
 from concurrent.futures import ThreadPoolExecutor, Future
+from common.core.question_gate import active_question_lease, LeaseLostError
 from datetime import datetime
 from typing import Any, List, Optional, Union, Dict, Iterator
 
@@ -122,6 +123,9 @@ class LLMService:
     def __init__(self, session: Session, current_user: CurrentUser, chat_question: ChatQuestion,
                  current_assistant: Optional[CurrentAssistant] = None, no_reasoning: bool = False,
                  embedding: bool = False, config: LLMConfig = None):
+        self.execution_lease = active_question_lease.get()
+        self.execution_failed = False
+        self.ensure_execution()
         self.sql_message = []
         self.chart_message = []
         self.generate_sql_logs = []
@@ -165,6 +169,7 @@ class LLMService:
                 session.add(chat)
                 session.flush()
                 session.refresh(chat)
+                self.ensure_execution()
                 session.commit()
 
         if chat.datasource:
@@ -248,6 +253,10 @@ class LLMService:
                     count_value = 0
                 instance.base_message_round_count_limit = count_value
         return instance
+
+    def ensure_execution(self):
+        if self.execution_lease is not None:
+            self.execution_lease.ensure_active()
 
     def is_running(self, timeout=0.5):
         try:
@@ -340,6 +349,7 @@ class LLMService:
                     self.chart_message.append(_msg)
 
     def init_record(self, session: Session) -> ChatRecord:
+        self.ensure_execution()
         self.record = save_question(session=session, current_user=self.current_user, question=self.chat_question)
         return self.record
 
@@ -357,6 +367,7 @@ class LLMService:
         return format_chart_fields(chart_info)
 
     def filter_terminology_template(self, _session: Session, oid: int = None, ds_id: int = None):
+        self.ensure_execution()
         self.current_logs[OperationEnum.FILTER_TERMS] = start_log(session=_session,
                                                                   operate=OperationEnum.FILTER_TERMS,
                                                                   record_id=self.record.id, local_operation=True)
@@ -377,6 +388,7 @@ class LLMService:
                                                                                    calculate_oid,
                                                                                    calculate_ds_id)
         #审计日志记录
+        self.ensure_execution()
         self.current_logs[OperationEnum.FILTER_TERMS] = end_log(session=_session,
                                                                 log=self.current_logs[OperationEnum.FILTER_TERMS],
                                                                 full_message=term_list)
@@ -384,6 +396,7 @@ class LLMService:
     def filter_custom_prompts(self, _session: Session, custom_prompt_type: CustomPromptTypeEnum, oid: int = None,
                               ds_id: int = None):
         if SQLBotLicenseUtil.valid():
+            self.ensure_execution()
             self.current_logs[OperationEnum.FILTER_CUSTOM_PROMPT] = start_log(session=_session,
                                                                               operate=OperationEnum.FILTER_CUSTOM_PROMPT,
                                                                               record_id=self.record.id,
@@ -404,12 +417,14 @@ class LLMService:
                                                                                     custom_prompt_type,
                                                                                     calculate_oid,
                                                                                     calculate_ds_id)
+            self.ensure_execution()
             self.current_logs[OperationEnum.FILTER_CUSTOM_PROMPT] = end_log(session=_session,
                                                                             log=self.current_logs[
                                                                                 OperationEnum.FILTER_CUSTOM_PROMPT],
                                                                             full_message=prompt_list)
 
     def filter_training_template(self, _session: Session, oid: int = None, ds_id: int = None):
+        self.ensure_execution()
         self.current_logs[OperationEnum.FILTER_SQL_EXAMPLE] = start_log(session=_session,
                                                                         operate=OperationEnum.FILTER_SQL_EXAMPLE,
                                                                         record_id=self.record.id,
@@ -430,12 +445,14 @@ class LLMService:
                                                                                    self.chat_question.question,
                                                                                    calculate_oid,
                                                                                    calculate_ds_id)
+        self.ensure_execution()
         self.current_logs[OperationEnum.FILTER_SQL_EXAMPLE] = end_log(session=_session,
                                                                       log=self.current_logs[
                                                                           OperationEnum.FILTER_SQL_EXAMPLE],
                                                                       full_message=example_list)
 
     def choose_table_schema(self, _session: Session):
+        self.ensure_execution()
         self.current_logs[OperationEnum.CHOOSE_TABLE] = start_log(session=_session,
                                                                   operate=OperationEnum.CHOOSE_TABLE,
                                                                   record_id=self.record.id,
@@ -455,6 +472,7 @@ class LLMService:
                 ds=self.ds,
                 table_list=tables)
 
+        self.ensure_execution()
         self.current_logs[OperationEnum.CHOOSE_TABLE] = end_log(session=_session,
                                                                 log=self.current_logs[OperationEnum.CHOOSE_TABLE],
                                                                 full_message=self.chat_question.db_schema)
@@ -476,6 +494,7 @@ class LLMService:
         analysis_msg.append(SystemPromptMessage(content=self.chat_question.analysis_sys_question()))
         analysis_msg.append(HumanMessage(content=self.chat_question.analysis_user_question()))
 
+        self.ensure_execution()
         self.current_logs[OperationEnum.ANALYSIS] = start_log(session=_session,
                                                               ai_modal_id=self.chat_question.ai_modal_id,
                                                               ai_modal_name=self.chat_question.ai_modal_name,
@@ -491,6 +510,7 @@ class LLMService:
         full_thinking_text = ''
         full_analysis_text = ''
         token_usage = {}
+        self.ensure_execution()
         res = process_stream(self.llm.stream(analysis_msg), token_usage)
         for chunk in res:
             if chunk.get('content'):
@@ -501,6 +521,7 @@ class LLMService:
 
         analysis_msg.append(AIMessage(full_analysis_text))
 
+        self.ensure_execution()
         self.current_logs[OperationEnum.ANALYSIS] = end_log(session=_session,
                                                             log=self.current_logs[
                                                                 OperationEnum.ANALYSIS],
@@ -512,6 +533,7 @@ class LLMService:
                                                                 for msg in analysis_msg],
                                                             reasoning_content=full_thinking_text,
                                                             token_usage=token_usage)
+        self.ensure_execution()
         self.record = save_analysis_answer(session=_session, record_id=self.record.id,
                                            answer=orjson.dumps({'content': full_analysis_text}).decode())
 
@@ -528,6 +550,7 @@ class LLMService:
         predict_msg.append(SystemPromptMessage(content=self.chat_question.predict_sys_question()))
         predict_msg.append(HumanMessage(content=self.chat_question.predict_user_question()))
 
+        self.ensure_execution()
         self.current_logs[OperationEnum.PREDICT_DATA] = start_log(session=_session,
                                                                   ai_modal_id=self.chat_question.ai_modal_id,
                                                                   ai_modal_name=self.chat_question.ai_modal_name,
@@ -543,6 +566,7 @@ class LLMService:
         full_thinking_text = ''
         full_predict_text = ''
         token_usage = {}
+        self.ensure_execution()
         res = process_stream(self.llm.stream(predict_msg), token_usage)
         for chunk in res:
             if chunk.get('content'):
@@ -552,8 +576,10 @@ class LLMService:
             yield chunk
 
         predict_msg.append(AIMessage(full_predict_text))
+        self.ensure_execution()
         self.record = save_predict_answer(session=_session, record_id=self.record.id,
                                           answer=orjson.dumps({'content': full_predict_text}).decode())
+        self.ensure_execution()
         self.current_logs[OperationEnum.PREDICT_DATA] = end_log(session=_session,
                                                                 log=self.current_logs[
                                                                     OperationEnum.PREDICT_DATA],
@@ -591,6 +617,7 @@ class LLMService:
         guess_msg.append(
             HumanMessage(content=self.chat_question.guess_user_question(orjson.dumps(old_questions).decode())))
 
+        self.ensure_execution()
         self.current_logs[OperationEnum.GENERATE_RECOMMENDED_QUESTIONS] = start_log(session=_session,
                                                                                     ai_modal_id=self.chat_question.ai_modal_id,
                                                                                     ai_modal_name=self.chat_question.ai_modal_name,
@@ -607,6 +634,7 @@ class LLMService:
         full_thinking_text = ''
         full_guess_text = ''
         token_usage = {}
+        self.ensure_execution()
         res = process_stream(self.llm.stream(guess_msg), token_usage)
         for chunk in res:
             if chunk.get('content'):
@@ -617,6 +645,7 @@ class LLMService:
 
         guess_msg.append(AIMessage(full_guess_text))
 
+        self.ensure_execution()
         self.current_logs[OperationEnum.GENERATE_RECOMMENDED_QUESTIONS] = end_log(session=_session,
                                                                                   log=self.current_logs[
                                                                                       OperationEnum.GENERATE_RECOMMENDED_QUESTIONS],
@@ -629,6 +658,7 @@ class LLMService:
                                                                                       for msg in guess_msg],
                                                                                   reasoning_content=full_thinking_text,
                                                                                   token_usage=token_usage)
+        self.ensure_execution()
         self.record = save_recommend_question_answer(session=_session, record_id=self.record.id,
                                                      answer={'content': full_guess_text},
                                                      articles_number=self.articles_number)
@@ -671,6 +701,7 @@ class LLMService:
             datasource_msg.append(
                 HumanMessage(self.chat_question.datasource_user_question(orjson.dumps(_ds_list_dict).decode())))
 
+            self.ensure_execution()
             self.current_logs[OperationEnum.CHOOSE_DATASOURCE] = start_log(session=_session,
                                                                            ai_modal_id=self.chat_question.ai_modal_id,
                                                                            ai_modal_name=self.chat_question.ai_modal_name,
@@ -685,6 +716,7 @@ class LLMService:
                                                                                          msg in datasource_msg])
 
             token_usage = {}
+            self.ensure_execution()
             res = process_stream(self.llm.stream(datasource_msg), token_usage)
             for chunk in res:
                 if chunk.get('content'):
@@ -694,6 +726,7 @@ class LLMService:
                 yield chunk
             datasource_msg.append(AIMessage(full_text))
 
+            self.ensure_execution()
             self.current_logs[OperationEnum.CHOOSE_DATASOURCE] = end_log(session=_session,
                                                                          log=self.current_logs[
                                                                              OperationEnum.CHOOSE_DATASOURCE],
@@ -747,6 +780,7 @@ class LLMService:
                         _session.add(_chat)
                         _session.flush()
                         _session.refresh(_chat)
+                        self.ensure_execution()
                         _session.commit()
                     except Exception as e:
                         _session.rollback()
@@ -761,6 +795,7 @@ class LLMService:
             _error = e
 
         if not ignore_auto_select and not settings.TABLE_EMBEDDING_ENABLED:
+            self.ensure_execution()
             self.record = save_select_datasource_answer(session=_session, record_id=self.record.id,
                                                         answer=orjson.dumps({'content': full_text}).decode(),
                                                         datasource=_datasource,
@@ -787,6 +822,7 @@ class LLMService:
             self.chat_question.sql_user_question(current_time=datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                                                  change_title=self.change_title)))
 
+        self.ensure_execution()
         self.current_logs[OperationEnum.GENERATE_SQL] = start_log(session=_session,
                                                                   ai_modal_id=self.chat_question.ai_modal_id,
                                                                   ai_modal_name=self.chat_question.ai_modal_name,
@@ -801,6 +837,7 @@ class LLMService:
         full_thinking_text = ''
         full_sql_text = ''
         token_usage = {}
+        self.ensure_execution()
         res = process_stream(self.llm.stream(self.sql_message), token_usage)
         for chunk in res:
             if chunk.get('content'):
@@ -811,6 +848,7 @@ class LLMService:
 
         self.sql_message.append(AIMessage(full_sql_text))
         #current_logs 用户得到这个结果的过程中每一步是怎么跑的
+        self.ensure_execution()
         self.current_logs[OperationEnum.GENERATE_SQL] = end_log(session=_session,
                                                                 log=self.current_logs[OperationEnum.GENERATE_SQL],
                                                                 full_message=[{'type': msg.type,
@@ -822,6 +860,7 @@ class LLMService:
                                                                 reasoning_content=full_thinking_text,
                                                                 token_usage=token_usage)
         #关心这次调用的结果
+        self.ensure_execution()
         self.record = save_sql_answer(session=_session, record_id=self.record.id,
                                       answer=orjson.dumps({'content': full_sql_text}).decode())
 
@@ -833,6 +872,7 @@ class LLMService:
         dynamic_sql_msg.append(SystemPromptMessage(content=self.chat_question.dynamic_sys_question()))
         dynamic_sql_msg.append(HumanMessage(content=self.chat_question.dynamic_user_question()))
 
+        self.ensure_execution()
         self.current_logs[OperationEnum.GENERATE_DYNAMIC_SQL] = start_log(session=session,
                                                                           ai_modal_id=self.chat_question.ai_modal_id,
                                                                           ai_modal_name=self.chat_question.ai_modal_name,
@@ -849,6 +889,7 @@ class LLMService:
         full_thinking_text = ''
         full_dynamic_text = ''
         token_usage = {}
+        self.ensure_execution()
         res = process_stream(self.llm.stream(dynamic_sql_msg), token_usage)
         for chunk in res:
             if chunk.get('content'):
@@ -858,6 +899,7 @@ class LLMService:
 
         dynamic_sql_msg.append(AIMessage(full_dynamic_text))
 
+        self.ensure_execution()
         self.current_logs[OperationEnum.GENERATE_DYNAMIC_SQL] = end_log(session=session,
                                                                         log=self.current_logs[
                                                                             OperationEnum.GENERATE_DYNAMIC_SQL],
@@ -897,6 +939,7 @@ class LLMService:
         permission_sql_msg.append(SystemPromptMessage(content=self.chat_question.filter_sys_question()))
         permission_sql_msg.append(HumanMessage(content=self.chat_question.filter_user_question()))
 
+        self.ensure_execution()
         self.current_logs[OperationEnum.GENERATE_SQL_WITH_PERMISSIONS] = start_log(session=session,
                                                                                    ai_modal_id=self.chat_question.ai_modal_id,
                                                                                    ai_modal_name=self.chat_question.ai_modal_name,
@@ -913,6 +956,7 @@ class LLMService:
         full_thinking_text = ''
         full_filter_text = ''
         token_usage = {}
+        self.ensure_execution()
         res = process_stream(self.llm.stream(permission_sql_msg), token_usage)
         for chunk in res:
             if chunk.get('content'):
@@ -922,6 +966,7 @@ class LLMService:
 
         permission_sql_msg.append(AIMessage(full_filter_text))
 
+        self.ensure_execution()
         self.current_logs[OperationEnum.GENERATE_SQL_WITH_PERMISSIONS] = end_log(session=session,
                                                                                  log=self.current_logs[
                                                                                      OperationEnum.GENERATE_SQL_WITH_PERMISSIONS],
@@ -959,6 +1004,7 @@ class LLMService:
         # append current question
         self.chart_message.append(HumanMessage(self.chat_question.chart_user_question(chart_type, schema)))
 
+        self.ensure_execution()
         self.current_logs[OperationEnum.GENERATE_CHART] = start_log(session=_session,
                                                                     ai_modal_id=self.chat_question.ai_modal_id,
                                                                     ai_modal_name=self.chat_question.ai_modal_name,
@@ -974,6 +1020,7 @@ class LLMService:
         full_thinking_text = ''
         full_chart_text = ''
         token_usage = {}
+        self.ensure_execution()
         res = process_stream(self.llm.stream(self.chart_message), token_usage)
         for chunk in res:
             if chunk.get('content'):
@@ -984,8 +1031,10 @@ class LLMService:
 
         self.chart_message.append(AIMessage(full_chart_text))
 
+        self.ensure_execution()
         self.record = save_chart_answer(session=_session, record_id=self.record.id,
                                         answer=orjson.dumps({'content': full_chart_text}).decode())
+        self.ensure_execution()
         self.current_logs[OperationEnum.GENERATE_CHART] = end_log(session=_session,
                                                                   log=self.current_logs[OperationEnum.GENERATE_CHART],
                                                                   full_message=[
@@ -1071,6 +1120,7 @@ class LLMService:
 
     def check_save_sql(self, session: Session, res: str, operate: OperationEnum) -> str:
         sql, *_ = self.check_sql(session=session, res=res, operate=operate)
+        self.ensure_execution()
         save_sql(session=session, sql=sql, record_id=self.record.id)
 
         self.chat_question.sql = sql
@@ -1134,6 +1184,7 @@ class LLMService:
         if error:
             raise SingleMessageError(message)
 
+        self.ensure_execution()
         save_chart(session=session, chart=orjson.dumps(chart).decode(), record_id=self.record.id)
 
         return chart
@@ -1145,6 +1196,7 @@ class LLMService:
         if not json_str:
             json_str = ''
 
+        self.ensure_execution()
         save_predict_data(session=session, record_id=self.record.id, data=json_str)
 
         if json_str == '':
@@ -1153,6 +1205,7 @@ class LLMService:
         return True
 
     def save_error(self, session: Session, message: str):
+        self.ensure_execution()
         return save_error_message(session=session, record_id=self.record.id, message=message)
 
     def save_sql_data(self, session: Session, data_obj: Dict[str, Any]):
@@ -1167,12 +1220,18 @@ class LLMService:
                 else:
                     data_obj['data'] = data_result
                 data_obj['datasource'] = self.ds.id
+            self.ensure_execution()
             return save_sql_exec_data(session=session, record_id=self.record.id,
                                       data=orjson.dumps(data_obj).decode())
         except Exception as e:
             raise e
 
     def finish(self, session: Session):
+        try:
+            self.ensure_execution()
+        except LeaseLostError:
+            # The stale worker must not publish a completion after losing its lease.
+            return
         return finish_record(session=session, record_id=self.record.id)
 
     def execute_sql(self, sql: str):
@@ -1218,18 +1277,46 @@ class LLMService:
 
     def run_task_async(self, in_chat: bool = True, stream: bool = True,
                        finish_step: ChatFinishStep = ChatFinishStep.GENERATE_CHART, return_img: bool = True):
+        self.ensure_execution()
         if in_chat:
             stream = True
         self.future = executor.submit(self.run_task_cache, in_chat, stream, finish_step, return_img)
+        if self.execution_lease is not None:
+            self.execution_lease.follow(self.future, lambda: self.execution_failed)
 
     def run_task_cache(self, in_chat: bool = True, stream: bool = True,
                        finish_step: ChatFinishStep = ChatFinishStep.GENERATE_CHART, return_img: bool = True):
-        for chunk in self.run_task(in_chat, stream, finish_step, return_img):
-            self.chunk_list.append(chunk)
+        self.cache_execution(self.run_task(in_chat, stream, finish_step, return_img), in_chat, stream)
+
+    def cache_execution(self, generator, in_chat, stream):
+        try:
+            while True:
+                self.ensure_execution()
+                try:
+                    chunk = next(generator)
+                except StopIteration:
+                    break
+                self.ensure_execution()
+                self.chunk_list.append(chunk)
+        except LeaseLostError:
+            self.execution_failed = True
+            message = 'Execution stopped because its lease was lost or the task time limit was reached'
+            if in_chat:
+                self.chunk_list.append('data:' + orjson.dumps({
+                    'type': 'error', 'code': 'LEASE_LOST', 'content': message,
+                    'request_id': self.chat_question.request_id,
+                }).decode() + '\n\n')
+            elif stream:
+                self.chunk_list.append('ERROR: ' + message + '\n')
+            else:
+                self.chunk_list.append({'success': False, 'code': 'LEASE_LOST', 'message': message,
+                                        'request_id': self.chat_question.request_id})
+        finally:
+            generator.close()
 
     def run_task(self, in_chat: bool = True, stream: bool = True,
                  finish_step: ChatFinishStep = ChatFinishStep.GENERATE_CHART, return_img: bool = True):
-        json_result: Dict[str, Any] = {'success': True}
+        json_result: Dict[str, Any] = {'success': True, 'request_id': self.chat_question.request_id}
         _session = None
         try:
             _session = session_maker()
@@ -1247,7 +1334,8 @@ class LLMService:
 
             # return id
             if in_chat:
-                yield 'data:' + orjson.dumps({'type': 'id', 'id': self.get_record().id}).decode() + '\n\n'
+                yield 'data:' + orjson.dumps({'type': 'id', 'id': self.get_record().id,
+                                             'request_id': self.chat_question.request_id}).decode() + '\n\n'
                 if self.get_record().regenerate_record_id:
                     yield 'data:' + orjson.dumps({'type': 'regenerate_record_id',
                                                   'regenerate_record_id': self.get_record().regenerate_record_id}).decode() + '\n\n'
@@ -1255,6 +1343,8 @@ class LLMService:
                     {'type': 'question', 'question': self.get_record().question}).decode() + '\n\n'
             else:
                 if stream:
+                    if self.chat_question.request_id:
+                        yield '> request_id: ' + self.chat_question.request_id + '\n'
                     yield '> ' + self.trans('i18n_chat.record_id_in_mcp') + str(self.get_record().id) + '\n'
                     yield '> ' + self.get_record().question + '\n\n'
             if not stream:
@@ -1309,6 +1399,7 @@ class LLMService:
                 if llm_brief_generated or (self.chat_question.question and self.chat_question.question.strip() != ''):
                     save_brief = llm_brief if (llm_brief and llm_brief != '') else self.chat_question.question.strip()[
                                                                                    :20]
+                    self.ensure_execution()
                     brief = rename_chat(session=_session,
                                         rename_object=RenameChat(id=self.get_record().chat_id,
                                                                  brief=save_brief, brief_generate=llm_brief_generated))
@@ -1394,10 +1485,13 @@ class LLMService:
                     yield json_result
                 return
 
+            self.ensure_execution()
             self.current_logs[OperationEnum.EXECUTE_SQL] = start_log(session=_session,
                                                                      operate=OperationEnum.EXECUTE_SQL,
                                                                      record_id=self.record.id, local_operation=True)
+            self.ensure_execution()
             result = self.execute_sql(sql=real_execute_sql)
+            self.ensure_execution()
             self.current_logs[OperationEnum.EXECUTE_SQL] = end_log(session=_session,
                                                                    log=self.current_logs[OperationEnum.EXECUTE_SQL],
                                                                    full_message={'sql': real_execute_sql,
@@ -1491,6 +1585,7 @@ class LLMService:
                 try:
                     if chart.get('type') != 'table' and return_img:
                         # yield '### generated chart picture\n\n'
+                        self.ensure_execution()
                         self.current_logs[OperationEnum.GENERATE_PICTURE] = start_log(session=_session,
                                                                                       operate=OperationEnum.GENERATE_PICTURE,
                                                                                       record_id=self.record.id,
@@ -1505,6 +1600,7 @@ class LLMService:
                         if error is not None:
                             raise error
 
+                        self.ensure_execution()
                         self.current_logs[OperationEnum.GENERATE_PICTURE] = end_log(session=_session,
                                                                                     log=self.current_logs[
                                                                                         OperationEnum.GENERATE_PICTURE],
@@ -1519,6 +1615,7 @@ class LLMService:
                 yield json_result
 
         except Exception as e:
+            self.execution_failed = True
             traceback.print_exc()
             error_msg: str
             if isinstance(e, SingleMessageError):
@@ -1534,7 +1631,8 @@ class LLMService:
             if _session:
                 self.save_error(session=_session, message=error_msg)
             if in_chat:
-                yield 'data:' + orjson.dumps({'content': error_msg, 'type': 'error'}).decode() + '\n\n'
+                yield 'data:' + orjson.dumps({'content': error_msg, 'type': 'error',
+                                             'request_id': self.chat_question.request_id}).decode() + '\n\n'
             else:
                 if stream:
                     yield f'&#x274c; **ERROR:**\n'
@@ -1544,8 +1642,10 @@ class LLMService:
                     json_result['message'] = error_msg
                     yield json_result
         finally:
-            self.finish(_session)
-            session_maker.remove()
+            try:
+                self.finish(_session)
+            finally:
+                session_maker.remove()
 
     def run_recommend_questions_task_async(self):
         self.future = executor.submit(self.run_recommend_questions_task_cache)
@@ -1575,22 +1675,27 @@ class LLMService:
 
     def run_analysis_or_predict_task_async(self, session: Session, action_type: str, base_record: ChatRecord,
                                            in_chat: bool = True, stream: bool = True):
+        self.ensure_execution()
         self.set_record(save_analysis_predict_record(session, base_record, action_type))
         self.future = executor.submit(self.run_analysis_or_predict_task_cache, action_type, in_chat, stream)
+        if self.execution_lease is not None:
+            self.execution_lease.follow(self.future, lambda: self.execution_failed)
 
     def run_analysis_or_predict_task_cache(self, action_type: str, in_chat: bool = True, stream: bool = True):
-        for chunk in self.run_analysis_or_predict_task(action_type, in_chat, stream):
-            self.chunk_list.append(chunk)
+        self.cache_execution(self.run_analysis_or_predict_task(action_type, in_chat, stream), in_chat, stream)
 
     def run_analysis_or_predict_task(self, action_type: str, in_chat: bool = True, stream: bool = True):
-        json_result: Dict[str, Any] = {'success': True}
+        json_result: Dict[str, Any] = {'success': True, 'request_id': self.chat_question.request_id}
         _session = None
         try:
             _session = session_maker()
             if in_chat:
-                yield 'data:' + orjson.dumps({'type': 'id', 'id': self.get_record().id}).decode() + '\n\n'
+                yield 'data:' + orjson.dumps({'type': 'id', 'id': self.get_record().id,
+                                             'request_id': self.chat_question.request_id}).decode() + '\n\n'
             else:
                 if stream:
+                    if self.chat_question.request_id:
+                        yield '> request_id: ' + self.chat_question.request_id + '\n'
                     yield '> ' + self.trans('i18n_chat.record_id_in_mcp') + str(self.get_record().id) + '\n'
                     yield '> ' + self.get_record().question + '\n\n'
             if not stream:
@@ -1695,6 +1800,7 @@ class LLMService:
             if not stream:
                 yield json_result
         except Exception as e:
+            self.execution_failed = True
             traceback.print_exc()
             error_msg: str
             if isinstance(e, SingleMessageError):

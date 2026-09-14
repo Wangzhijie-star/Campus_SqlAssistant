@@ -1,0 +1,57 @@
+[
+  {
+    "path": "backend/apps/chat/models/question_request.py",
+    "before": null,
+    "after": "7bfd5b0c217e07d201cd09e509cc2a736e062ba205a7ed39b735688e74b100c7"
+  },
+  {
+    "path": "backend/apps/chat/models/chat_model.py",
+    "before": "e03c90c0da5bd983aeec1b40e7d7f52de80aa7420e4ecf323bc550613c3950b2",
+    "after": "dac375fad646c96606220a8cc75eaa8295fd468219ff6aadb766900790d71e87"
+  },
+  {
+    "path": "backend/apps/chat/api/chat.py",
+    "before": "aa9eb909fb5cc1d2ffcf4ae1afda4b2f77f4dbe7c402b5d072bb87a9d844ff6c",
+    "after": "ab223590e4a18b50927169b91ff581a21cdb0498e3e0095311b27fe44b27721d"
+  },
+  {
+    "path": "backend/apps/chat/task/llm.py",
+    "before": "e647ca6d7e9e0993e8fa7229ce00178c0c6194f5ad00cb89947e2b51620b28d6",
+    "after": "f9bad617a78254a720bcd63e7b902360d55f2133e501c2407e21942224a54363"
+  },
+  {
+    "path": "backend/apps/mcp/mcp.py",
+    "before": "9677e2f1a419ee159d78aa0fd670339b31ad4f9fb8411b0264e94523ab95fc8c",
+    "after": "49842a0ae3071fb0a438659797a6dd00f501c420d38a61a1de6cd1f2a14f1c8f"
+  },
+  {
+    "path": "frontend/src/utils/questionRequest.ts",
+    "before": null,
+    "after": "7584a81a532a9c28bbc2cd36d604e0ae7dc1cf550e417537048346fd4056b3ce"
+  },
+  {
+    "path": "frontend/src/api/chat.ts",
+    "before": "eed96b7971c156f3e72d050a7c5d7a5ffc2ff661e521318bf558b1587a83cb49",
+    "after": "8ec5fd6012ea323d70972832d980a32f46f343d10707d614cc5768599ceccc86"
+  },
+  {
+    "path": "frontend/src/views/chat/index.vue",
+    "before": "df914e0ebc15fde600c3d25b9730a4f4f4e7ee2ab386b80c38ee70628ba0a260",
+    "after": "ecf56141ca293e34c27438bbda5022f347656efa6e602395a500791fda8c699b"
+  },
+  {
+    "path": "frontend/src/views/chat/answer/ChartAnswer.vue",
+    "before": "de222018c4a744a36e2b7783dcb36e4a6f0dff68d98f0d28a27dd53c14cb01e9",
+    "after": "31151de6f000d1db259851c6f549a1c96243519ac3b951824e2189640ac16cdf"
+  },
+  {
+    "path": "tests/test_question_request.py",
+    "before": null,
+    "after": "dd8a5d7b3e8d3c13366cf5bccddb8d5aae0f30b1c83a083b19ad570fbc10cb3e"
+  },
+  {
+    "path": "frontend/tests/questionRequest.test.mjs",
+    "before": null,
+    "after": "719c82cc6ab906858553261e6db95cb35510393b459f8c472e265bcb78908f86"
+  }
+]

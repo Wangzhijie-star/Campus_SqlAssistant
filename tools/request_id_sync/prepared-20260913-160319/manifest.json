@@ -1,0 +1,77 @@
+[
+  {
+    "path": "backend/common/core/question_gate.py",
+    "before": null,
+    "after": "cd2e23c487c80e9adf70f08e8751989e278367704a655a4a91752684173c8729"
+  },
+  {
+    "path": "backend/common/core/idempotency_redis.py",
+    "before": "252d36b624a5af2bd79774404a6c731ea2ce84787ac1c36fa5b330c82c308b78",
+    "after": "b2208d51ec54bf6d7935da48a0614660d88c6b2cedf69e5bc529087b6dc0ca23"
+  },
+  {
+    "path": "backend/common/core/config.py",
+    "before": "d42d13440a8b8b5a1f5bcbbd595e038883f86b9abe3633829688de10d8599b6b",
+    "after": "b8a7fb52f83dbe8b4c52ae8cabe5cecb5e61aa5389083c131b33e7f035a36bfc"
+  },
+  {
+    "path": "backend/main.py",
+    "before": "a8ec1dbe4ea1720f28e1d6fe7398522969493537caaa1bbec8820802d48d8239",
+    "after": "0e65b5fb02985c287b331b659eb761316cd6336fc7594ee974846ef3c9bfb71b"
+  },
+  {
+    "path": "backend/apps/chat/api/chat.py",
+    "before": "ab223590e4a18b50927169b91ff581a21cdb0498e3e0095311b27fe44b27721d",
+    "after": "8d56b23759b8783db3e4dac99f48c48b4460a3cca7ea77308c58b567e24246d1"
+  },
+  {
+    "path": "backend/apps/chat/task/llm.py",
+    "before": "f9bad617a78254a720bcd63e7b902360d55f2133e501c2407e21942224a54363",
+    "after": "66ddacd38d041c8c97bfdad076137091d334c3e126b8b0bba652cc76a12a9415"
+  },
+  {
+    "path": "backend/apps/mcp/mcp.py",
+    "before": "49842a0ae3071fb0a438659797a6dd00f501c420d38a61a1de6cd1f2a14f1c8f",
+    "after": "3e19af3d5dedc9d18677d3a15bfd1f08e97d0b61894a1342d3ba89dee887222e"
+  },
+  {
+    "path": "frontend/src/views/chat/index.vue",
+    "before": "ecf56141ca293e34c27438bbda5022f347656efa6e602395a500791fda8c699b",
+    "after": "be7f99929806877935a4d2672b2de7b5e811df8fe2e12a09f25f5bb5716ca958"
+  },
+  {
+    "path": "frontend/src/views/chat/answer/ChartAnswer.vue",
+    "before": "31151de6f000d1db259851c6f549a1c96243519ac3b951824e2189640ac16cdf",
+    "after": "68b63f99b17eb147b177e2c808330ee196f74ba9d8c5ee00f52f4591bd41b1c8"
+  },
+  {
+    "path": "frontend/src/views/chat/answer/AnalysisAnswer.vue",
+    "before": "fd978adcc5c1989263a9dc9f86151917d799580f38d681f0079d970a40d3fa13",
+    "after": "f66e392266e35546be2ae6fdc6be8ad39e2d1eb60c69f0f7d8cf7775336d8168"
+  },
+  {
+    "path": "frontend/src/views/chat/answer/PredictAnswer.vue",
+    "before": "49e03bcf9c3756ed77b88156edd3c9282d5b993b7912359c2724338123f4d4b4",
+    "after": "14578d894bfb9d7efd8469d0dd5ff2d895c21f00abbf0983a9832ccbfe2c0bce"
+  },
+  {
+    "path": "tests/test_question_request.py",
+    "before": "dd8a5d7b3e8d3c13366cf5bccddb8d5aae0f30b1c83a083b19ad570fbc10cb3e",
+    "after": "15d19aae5add566c844b3859ff684bd5bc3aa13c84361a3d28766a821ccef8d3"
+  },
+  {
+    "path": "tests/test_question_gate.py",
+    "before": null,
+    "after": "9fc673d8f543f6eb36c1477b5a49a7d8eac97f8984dffb66a2318f363c3f61d0"
+  },
+  {
+    "path": "tests/test_question_gate_routes.py",
+    "before": null,
+    "after": "4290b2054a78f85b6012d1f6477dc5afabf3c72737c4ac9f2d016f6805994076"
+  },
+  {
+    "path": "tests/check_question_gate_redis.py",
+    "before": null,
+    "after": "9366fbba9107ca37b53b10c06e7df0e5562ea5635c86c5b37384e128051979a3"
+  }
+]

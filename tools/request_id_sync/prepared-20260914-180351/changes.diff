@@ -1,0 +1,654 @@
+--- ubuntu/backend/common/core/question_gate.py
++++ merged/backend/common/core/question_gate.py
+@@ -56,6 +56,10 @@
+         self.renewal = None
+         self.observer = None
+         self.closed = False
++        self.on_completed = None
++        self.record_id = None
++        self.request_id = None
++        self.request_fingerprint = None
+ 
+     def ensure_active(self):
+         # This check is also called in worker threads; it does no async Redis I/O.
+@@ -120,7 +124,13 @@
+             logger.exception('Question worker failed')
+         finally:
+             if completed:
+-                await self.close()
++                try:
++                    if self.on_completed and self.state != GateState.LOST:
++                        await self.on_completed(self.state != GateState.SUCCESS)
++                except Exception:
++                    logger.exception('Question result finalization failed; record remains unavailable')
++                finally:
++                    await self.close()
+             else:
+                 await self.stop_renewal()
+ 
+@@ -159,12 +169,13 @@
+         self.tasks.add(task)
+         task.add_done_callback(self.tasks.discard)
+ 
+-    async def acquire(self, chat_id, request_id):
++    async def acquire(self, chat_id, request_id, request_only=False):
+         if self.redis is None or self.closing:
+             raise GateRejected('COORDINATION_UNAVAILABLE', 'Request coordination is unavailable', 503)
+         # Legacy record actions share the chat lock without inventing a request_id.
+         keys = ([self.keys.request_processing(chat_id, request_id)] if request_id else [])
+-        keys.append(self.keys.chat_lock(chat_id))
++        if not request_only:
++            keys.append(self.keys.chat_lock(chat_id))
+         lease = QuestionLease(self, keys)
+         started = time.monotonic()
+         try:
+@@ -190,17 +201,41 @@
+             raise GateRejected('COORDINATION_UNAVAILABLE', 'Request coordination is unavailable', 503) from None
+ 
+     @asynccontextmanager
+-    async def enter(self, chat_id, request_id):
+-        lease = await self.acquire(chat_id, request_id)
++    async def enter(self, chat_id, request_id, request_only=False):
++        lease = await self.acquire(chat_id, request_id, request_only=request_only)
+         context_token = active_question_lease.set(lease)
+         try:
+             yield lease
+         finally:
+             active_question_lease.reset(context_token)
+             if lease.observer is None:
+-                cleanup = asyncio.create_task(lease.close())
+-                self.track(cleanup)
+-                await asyncio.shield(cleanup)
++                try:
++                    if lease.on_completed and lease.state != GateState.LOST:
++                        await lease.on_completed(True)
++                except Exception:
++                    logger.exception('Question submission finalization failed')
++                finally:
++                    cleanup = asyncio.create_task(lease.close())
++                    self.track(cleanup)
++                    await asyncio.shield(cleanup)
++
++    async def acquire_chat(self, lease, chat_id):
++        """Promote a request-only lease; ambiguous SETs are included in owner-safe cleanup."""
++        lease.ensure_active()
++        await lease.stop_renewal()
++        key = self.keys.chat_lock(chat_id)
++        lease.keys.append(key)
++        try:
++            acquired = await self.redis.set(key, lease.token, nx=True, px=int(self.ttl * 1000))
++            if not acquired:
++                raise GateRejected('CHAT_BUSY', 'Another request is running in this chat; please try again when it finishes')
++            lease.ensure_active()
++            await lease.renew_once()
++            lease.renewal = asyncio.create_task(lease._renew())
++        except (GateRejected, asyncio.CancelledError):
++            raise
++        except Exception:
++            raise GateRejected('COORDINATION_UNAVAILABLE', 'Request coordination is unavailable', 503) from None
+ 
+     async def shutdown(self):
+         self.closing = True
+--- ubuntu/backend/common/core/idempotency_redis.py
++++ merged/backend/common/core/idempotency_redis.py
+@@ -24,6 +24,9 @@
+ 
+     def chat_lock(self, chat_id: int) -> str:
+         return f'{self.prefix}:chat:lock:{chat_id}'
++
++    def request_replay(self, chat_id: int, request_id: str) -> str:
++        return f'{self.prefix}:request:replay:{chat_id}:{request_id}'
+ 
+ 
+ @asynccontextmanager
+--- ubuntu/backend/apps/chat/models/chat_model.py
++++ merged/backend/apps/chat/models/chat_model.py
+@@ -5,7 +5,7 @@
+ from fastapi import Body
+ from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+ from pydantic import BaseModel
+-from sqlalchemy import Column, Integer, Text, BigInteger, DateTime, Identity, Boolean
++from sqlalchemy import Column, Integer, Text, BigInteger, DateTime, Identity, Boolean, UniqueConstraint
+ from sqlalchemy import Enum as SQLAlchemyEnum
+ from sqlalchemy.dialects.postgresql import JSONB
+ from sqlmodel import SQLModel, Field
+@@ -103,6 +103,10 @@
+ 
+ class ChatRecord(SQLModel, table=True):
+     __tablename__ = "chat_record"
++    __table_args__ = (UniqueConstraint('chat_id', 'request_id', name='uq_chat_record_request'),)
++    request_id: Optional[str] = Field(default=None, max_length=128, nullable=True)
++    request_fingerprint: Optional[str] = Field(default=None, max_length=64, nullable=True)
++    status: Optional[str] = Field(default=None, max_length=16, nullable=True)
+     id: Optional[int] = Field(sa_column=Column(BigInteger, Identity(always=True), primary_key=True))
+     chat_id: int = Field(sa_column=Column(BigInteger, nullable=False))
+     ai_modal_id: Optional[int] = Field(sa_column=Column(BigInteger))
+--- ubuntu/backend/apps/chat/api/chat.py
++++ merged/backend/apps/chat/api/chat.py
+@@ -26,6 +26,7 @@
+ from common.utils.command_utils import parse_quick_command
+ from common.utils.data_format import DataFormat
+ from common.core.question_gate import GateRejected
++from apps.chat.curd.question_replay import fingerprint, cached_result, database_result, complete_result
+ from apps.system.crud.user import user_ws_list
+ 
+ router = APIRouter(tags=["Data Q&A"], prefix="/chat")
+@@ -267,7 +268,21 @@
+         if not allowed:
+             raise HTTPException(status_code=403, detail='Cannot access this chat')
+     try:
+-        async with gate.enter(question.chat_id, question.request_id):
++        request_fingerprint = fingerprint(question, {**kwargs, 'user_id': current_user.id})
++        replay = await cached_result(gate, question.chat_id, question.request_id, request_fingerprint)
++        if replay:
++            return JSONResponse(content=replay)
++        async with gate.enter(question.chat_id, question.request_id, request_only=True) as lease:
++            replay = await database_result(gate, question.chat_id, question.request_id, request_fingerprint)
++            if replay:
++                return JSONResponse(content=replay)
++            await gate.acquire_chat(lease, question.chat_id)
++            replay = await database_result(gate, question.chat_id, question.request_id, request_fingerprint)
++            if replay:
++                return JSONResponse(content=replay)
++            lease.request_id = question.request_id
++            lease.request_fingerprint = request_fingerprint
++            lease.on_completed = lambda failed: complete_result(gate, lease, failed)
+             return await question_answer_inner(session, current_user, question, current_assistant, **kwargs)
+     except GateRejected as error:
+         return gate_error_response(error, question.request_id)
+--- ubuntu/backend/apps/chat/curd/chat.py
++++ merged/backend/apps/chat/curd/chat.py
+@@ -826,6 +826,12 @@
+     record.engine_type = chat.engine_type
+     record.ai_modal_id = question.ai_modal_id
+     record.regenerate_record_id = question.regenerate_record_id
++    from common.core.question_gate import active_question_lease
++    lease = active_question_lease.get()
++    if lease and lease.request_id:
++        record.request_id = lease.request_id
++        record.request_fingerprint = lease.request_fingerprint
++        record.status = 'PROCESSING'
+ 
+     result = ChatRecord(**record.model_dump())
+ 
+@@ -834,6 +840,9 @@
+     session.refresh(record)
+     result.id = record.id
+     session.commit()
++
++    if lease and record.request_id:
++        lease.record_id = record.id
+ 
+     return result
+ 
+@@ -855,6 +864,13 @@
+     elif action_type == 'predict':
+         record.predict_record_id = base_record.id
+ 
++    from common.core.question_gate import active_question_lease
++    lease = active_question_lease.get()
++    if lease and lease.request_id:
++        record.request_id = lease.request_id
++        record.request_fingerprint = lease.request_fingerprint
++        record.status = 'PROCESSING'
++
+     result = ChatRecord(**record.model_dump())
+ 
+     session.add(record)
+@@ -863,6 +879,8 @@
+     result.id = record.id
+     session.commit()
+ 
++    if lease and record.request_id:
++        lease.record_id = record.id
+     return result
+ 
+ 
+--- ubuntu/backend/apps/chat/curd/question_replay.py
++++ merged/backend/apps/chat/curd/question_replay.py
+@@ -0,0 +1,139 @@
++"""Durable replay snapshots. Never execute SQL or infer completion from an absent lock."""
++import asyncio
++import hashlib
++import json
++import logging
++
++from fastapi.encoders import jsonable_encoder
++from sqlalchemy import select
++from sqlmodel import Session
++
++from apps.chat.models.chat_model import ChatRecord, ChatRecordResult, ChatLog
++from common.core.db import engine
++from common.core.question_gate import GateRejected
++
++logger = logging.getLogger(__name__)
++REPLAY_TTL = 600
++TERMINAL = ('SUCCESS', 'FAILED')
++
++
++def fingerprint(question, options):
++    # Capture original command before regenerate rewrites the question text.
++    value = {'question': question.question, 'options': options}
++    return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False,
++                                    default=str).encode()).hexdigest()
++
++
++def lookup(chat_id, request_id, identity_only=False):
++    with Session(engine) as session:
++        fields = ((ChatRecord.id, ChatRecord.status, ChatRecord.request_fingerprint)
++                  if identity_only else (ChatRecord,))
++        result = session.execute(select(*fields).where(
++            ChatRecord.chat_id == chat_id, ChatRecord.request_id == request_id))
++        return result.one_or_none() if identity_only else result.scalar_one_or_none()
++
++
++def snapshot(record):
++    from apps.chat.curd.chat import format_record
++    with Session(engine) as session:
++        usages = session.execute(select(ChatLog.token_usage).where(ChatLog.pid == record.id)).scalars().all()
++    tokens = 0
++    for usage in usages:
++        if isinstance(usage, str):
++            try:
++                usage = json.loads(usage)
++            except ValueError:
++                continue
++        if isinstance(usage, dict):
++            tokens += int(usage.get('total_tokens') or 0)
++        elif isinstance(usage, (int, float)):
++            tokens += int(usage)
++    duration = ((record.finish_time - record.create_time).total_seconds()
++                if record.finish_time and record.create_time else None)
++    result = ChatRecordResult(**record.model_dump(), total_tokens=tokens, duration=duration)
++    return jsonable_encoder({
++        'replay': True, 'request_id': record.request_id, 'chat_id': record.chat_id,
++        'record_id': record.id, 'status': record.status,
++        'request_fingerprint': record.request_fingerprint,
++        'record': format_record(result),
++    })
++
++
++def finalize(record_id, failed, lease):
++    with Session(engine) as session:
++        record = session.get(ChatRecord, record_id)
++        if record is None or record.status != 'PROCESSING':
++            return record
++        lease.ensure_active()
++        if failed or record.error or not record.finish:
++            record.status = 'FAILED'
++            record.error = record.error or '本次执行未获得完整结果，请重新提问。'
++        else:
++            record.status = 'SUCCESS'
++        from datetime import datetime
++        record.finish = True
++        record.finish_time = record.finish_time or datetime.now()
++        session.add(record)
++        session.commit()
++        session.refresh(record)
++        return record
++
++
++async def cache_result(gate, payload):
++    try:
++        await gate.redis.set(gate.keys.request_replay(payload['chat_id'], payload['request_id']),
++                             json.dumps(payload, ensure_ascii=False), ex=REPLAY_TTL)
++    except Exception:
++        # Durable completion is authoritative even when cache refill fails.
++        logger.warning('Replay cache write failed; database fallback remains available', exc_info=True)
++
++
++async def cached_result(gate, chat_id, request_id, expected_fingerprint):
++    if gate.redis is None:
++        raise GateRejected('COORDINATION_UNAVAILABLE', 'Request coordination is unavailable', 503)
++    try:
++        raw = await gate.redis.get(gate.keys.request_replay(chat_id, request_id))
++    except Exception:
++        raise GateRejected('COORDINATION_UNAVAILABLE', 'Request coordination is unavailable', 503) from None
++    if not raw:
++        return None
++    try:
++        payload = json.loads(raw)
++        valid = (payload['chat_id'] == chat_id and payload['request_id'] == request_id
++                 and payload['status'] in TERMINAL and isinstance(payload['record'], dict))
++    except (ValueError, KeyError, TypeError):
++        return None
++    if not valid:
++        return None
++    # A cached snapshot must not resurrect a deleted record.
++    record = await asyncio.to_thread(lookup, chat_id, request_id, True)
++    if record is None or record.id != payload['record_id'] or record.status not in TERMINAL:
++        return None
++    check_identity(record, expected_fingerprint)
++    return payload
++
++
++def check_identity(record, expected_fingerprint):
++    if record.request_fingerprint != expected_fingerprint:
++        raise GateRejected('REQUEST_ID_CONFLICT', '同一 request_id 不能用于不同的提问或操作。')
++
++
++async def database_result(gate, chat_id, request_id, expected_fingerprint):
++    record = await asyncio.to_thread(lookup, chat_id, request_id)
++    if record is None:
++        return None
++    check_identity(record, expected_fingerprint)
++    if record.status not in TERMINAL:
++        raise GateRejected('RESULT_UNAVAILABLE', '本次执行未获得完整结果，请重新提问。')
++    payload = await asyncio.to_thread(snapshot, record)
++    await cache_result(gate, payload)
++    return payload
++
++
++async def complete_result(gate, lease, failed):
++    if lease.record_id is None:
++        return
++    record = await asyncio.to_thread(finalize, lease.record_id, failed, lease)
++    if record and record.status in TERMINAL:
++        payload = await asyncio.to_thread(snapshot, record)
++        await cache_result(gate, payload)
+--- ubuntu/backend/alembic/versions/072_question_replay.py
++++ merged/backend/alembic/versions/072_question_replay.py
+@@ -0,0 +1,22 @@
++"""Associate requests with durable question outcomes; legacy records remain nullable."""
++from alembic import op
++import sqlalchemy as sa
++
++revision = '072_question_replay'
++down_revision = 'a2e2ecfa5a9c'
++branch_labels = None
++depends_on = None
++
++
++def upgrade():
++    op.add_column('chat_record', sa.Column('request_id', sa.String(128), nullable=True))
++    op.add_column('chat_record', sa.Column('request_fingerprint', sa.String(64), nullable=True))
++    op.add_column('chat_record', sa.Column('status', sa.String(16), nullable=True))
++    op.create_unique_constraint('uq_chat_record_request', 'chat_record', ['chat_id', 'request_id'])
++
++
++def downgrade():
++    op.drop_constraint('uq_chat_record_request', 'chat_record', type_='unique')
++    op.drop_column('chat_record', 'status')
++    op.drop_column('chat_record', 'request_fingerprint')
++    op.drop_column('chat_record', 'request_id')
+--- ubuntu/frontend/src/views/chat/answer/ChartAnswer.vue
++++ merged/frontend/src/views/chat/answer/ChartAnswer.vue
+@@ -119,10 +119,27 @@
+       } catch {
+         // Non-JSON gateway errors still retain their original HTTP status.
+       }
+-      if (payload.code === 'CHAT_BUSY' || payload.code === 'PROCESSING') {
++      if (payload.code === 'CHAT_BUSY' || payload.code === 'PROCESSING' || payload.code === 'RESULT_UNAVAILABLE') {
+         emits('request-rejected', payload.code, currentRecord.question)
+       }
+       throw new Error(payload.message || `HTTP ${response.status}: ${text}`)
++    }
++    if (response.headers.get('content-type')?.includes('application/json')) {
++      const body = JSONBig.parse(await response.text())
++      const payload = body.replay ? body : body.data
++      if (!payload?.replay || !payload.record) {
++        throw new Error('Unexpected question response')
++      }
++      const existing = _currentChat.value.records.find(
++        (record: ChatRecord) => record !== currentRecord && record.id === payload.record.id
++      )
++      Object.assign(existing || currentRecord, payload.record)
++      if (existing) {
++        const placeholder = _currentChat.value.records.indexOf(currentRecord)
++        if (placeholder >= 0) _currentChat.value.records.splice(placeholder, 1)
++      }
++      emits('finish', payload.record.id, true)
++      return
+     }
+     const reader = response.body.getReader()
+     const decoder = new TextDecoder('utf-8')
+--- ubuntu/frontend/src/views/chat/index.vue
++++ merged/frontend/src/views/chat/index.vue
+@@ -774,10 +774,14 @@
+ 
+ const chartAnswerRef = ref()
+ const getRecommendQuestionsLoading = ref(false)
+-async function onChartAnswerFinish(id: number) {
++async function onChartAnswerFinish(id: number, replay = false) {
+   getRecommendQuestionsLoading.value = true
+   loading.value = false
+   isTyping.value = false
++  if (replay) {
++    getRecommendQuestionsLoading.value = false
++    return
++  }
+   getRecordUsage(id)
+   getRecommendQuestions(id)
+ }
+@@ -793,7 +797,7 @@
+ }
+ 
+ function onQuestionRejected(code: string, question?: string) {
+-  if (code === 'CHAT_BUSY' && !inputMessage.value.trim() && question) {
++  if ((code === 'CHAT_BUSY' || code === 'RESULT_UNAVAILABLE') && !inputMessage.value.trim() && question) {
+     inputMessage.value = question
+   }
+ }
+--- ubuntu/tests/test_question_gate.py
++++ merged/tests/test_question_gate.py
+@@ -196,6 +196,33 @@
+         self.assertEqual(error.exception.status_code, 503)
+         self.assertEqual(error.exception.code, 'COORDINATION_UNAVAILABLE')
+ 
++    async def test_completion_callback_runs_before_unlock(self):
++        lease = await self.gate.acquire(1, 'r1')
++        future = Future()
++        observed = []
++
++        async def complete(failed):
++            observed.append((failed, len(self.redis.values)))
++        lease.on_completed = complete
++        lease.follow(future, lambda: False)
++        future.set_result(None)
++        await lease.observer
++        self.assertEqual(observed, [(False, 2)])
++        self.assertEqual(self.redis.values, {})
++
++    async def test_finalization_failure_still_releases_locks(self):
++        lease = await self.gate.acquire(1, 'r1')
++        future = Future()
++
++        async def complete(failed):
++            raise ConnectionError('database unavailable')
++        lease.on_completed = complete
++        lease.follow(future, lambda: False)
++        future.set_result(None)
++        with self.assertLogs('common.core.question_gate', level='ERROR'):
++            await lease.observer
++        self.assertEqual(self.redis.values, {})
++
+ 
+ if __name__ == '__main__':
+     unittest.main()
+--- ubuntu/tests/test_question_gate_routes.py
++++ merged/tests/test_question_gate_routes.py
+@@ -34,12 +34,17 @@
+             'ChatFinishStep': SimpleNamespace(GENERATE_CHART=3),
+             'LLMService': SimpleNamespace(create=self.creator),
+             'traceback': MagicMock(),
++            'fingerprint': lambda *args: 'fingerprint',
++            'cached_result': AsyncMock(return_value=None),
++            'database_result': AsyncMock(return_value=None),
++            'complete_result': AsyncMock(),
+             'orjson': SimpleNamespace(dumps=lambda value: json.dumps(value).encode()),
+         }
+         for name in ('gate_error_response', 'collect_result', 'stream_sql'):
+             load_function('backend/apps/chat/api/chat.py', name, namespace)
+         namespace['question_answer_inner'] = namespace['stream_sql']
+         self.handler = load_function('backend/apps/chat/api/chat.py', 'guarded_question', namespace)
++        self.namespace = namespace
+         self.session = SimpleNamespace(get=lambda *args: SimpleNamespace(oid=1))
+         self.user = SimpleNamespace(id=1, oid=1)
+         self.question = SimpleNamespace(chat_id=1, request_id='r1')
+@@ -81,6 +86,25 @@
+         self.assertEqual(self.gate.redis.values, {})
+         self.creator.assert_not_called()
+ 
++    async def test_unfinished_record_rejects_without_chat_lock_or_worker(self):
++        self.namespace['database_result'].side_effect = GateRejected(
++            'RESULT_UNAVAILABLE', '本次执行未获得完整结果，请重新提问。')
++        async with self.gate.enter(1, 'old-worker'):
++            response = await self.handler(self.gate, self.session, self.user, self.question)
++            self.assertEqual(json.loads(response.body)['code'], 'RESULT_UNAVAILABLE')
++            self.creator.assert_not_called()
++            self.assertNotIn(self.gate.keys.request_processing(1, 'r1'), self.gate.redis.values)
++            self.assertIn(self.gate.keys.chat_lock(1), self.gate.redis.values)
++
++    async def test_terminal_replay_does_not_require_idle_chat(self):
++        self.namespace['database_result'].return_value = {'replay': True, 'record_id': 8}
++        async with self.gate.enter(1, 'other'):
++            response = await self.handler(self.gate, self.session, self.user, self.question)
++            self.assertEqual(response.status_code, 200)
++            self.assertEqual(json.loads(response.body)['record_id'], 8)
++            self.creator.assert_not_called()
++            self.assertNotIn(self.gate.keys.request_processing(1, 'r1'), self.gate.redis.values)
++
+ 
+ if __name__ == '__main__':
+     unittest.main()
+--- ubuntu/tests/test_question_replay.py
++++ merged/tests/test_question_replay.py
+@@ -0,0 +1,70 @@
++"""Replay policy tests execute production helpers with isolated storage, never call AI."""
++import asyncio
++import hashlib
++import json
++import logging
++from types import SimpleNamespace
++from unittest.mock import AsyncMock, Mock
++import unittest
++
++from test_question_request import load_function
++from common.core.question_gate import GateRejected
++
++
++class ReplayTests(unittest.IsolatedAsyncioTestCase):
++    def setUp(self):
++        self.record = SimpleNamespace(id=7, status='SUCCESS', request_fingerprint='fp')
++        self.payload = {'replay': True, 'chat_id': 1, 'request_id': 'r', 'record_id': 7,
++                        'status': 'SUCCESS', 'request_fingerprint': 'fp', 'record': {'id': 7}}
++        self.ns = {'asyncio': asyncio, 'json': json, 'hashlib': hashlib, 'GateRejected': GateRejected,
++                   'logger': logging.getLogger(__name__), 'REPLAY_TTL': 600,
++                   'TERMINAL': ('SUCCESS', 'FAILED'), 'lookup': Mock(return_value=self.record),
++                   'snapshot': Mock(return_value=self.payload)}
++        for name in ('check_identity', 'fingerprint', 'cache_result', 'cached_result', 'database_result'):
++            load_function('backend/apps/chat/curd/question_replay.py', name, self.ns)
++        self.gate = SimpleNamespace(redis=SimpleNamespace(set=AsyncMock(), get=AsyncMock(return_value=None)),
++                                    keys=SimpleNamespace(request_replay=lambda *args: 'replay:key'))
++
++    async def test_unfinished_returns_unavailable_without_snapshot_or_cache(self):
++        self.record.status = 'PROCESSING'
++        with self.assertRaises(GateRejected) as caught:
++            await self.ns['database_result'](self.gate, 1, 'r', 'fp')
++        self.assertEqual(caught.exception.code, 'RESULT_UNAVAILABLE')
++        self.assertEqual(self.record.status, 'PROCESSING')
++        self.ns['snapshot'].assert_not_called()
++        self.gate.redis.set.assert_not_awaited()
++
++    async def test_success_and_failure_refill_ten_minutes(self):
++        for status in ('SUCCESS', 'FAILED'):
++            self.record.status = status
++            self.assertEqual(await self.ns['database_result'](self.gate, 1, 'r', 'fp'), self.payload)
++            self.assertEqual(self.gate.redis.set.call_args.kwargs['ex'], 600)
++
++    async def test_cache_write_failure_still_returns_database_result(self):
++        self.gate.redis.set.side_effect = ConnectionError('offline')
++        self.assertEqual(await self.ns['database_result'](self.gate, 1, 'r', 'fp'), self.payload)
++
++    async def test_cache_read_failure_is_not_a_miss(self):
++        self.gate.redis.get.side_effect = ConnectionError('offline')
++        with self.assertRaises(GateRejected) as caught:
++            await self.ns['cached_result'](self.gate, 1, 'r', 'fp')
++        self.assertEqual(caught.exception.status_code, 503)
++
++    async def test_deleted_record_cannot_be_resurrected_by_cache(self):
++        self.gate.redis.get.return_value = json.dumps(self.payload)
++        self.ns['lookup'].return_value = None
++        self.assertIsNone(await self.ns['cached_result'](self.gate, 1, 'r', 'fp'))
++
++    async def test_same_id_different_content_is_rejected(self):
++        with self.assertRaises(GateRejected) as caught:
++            await self.ns['database_result'](self.gate, 1, 'r', 'different')
++        self.assertEqual(caught.exception.code, 'REQUEST_ID_CONFLICT')
++
++    async def test_no_record_allows_new_execution(self):
++        self.ns['lookup'].return_value = None
++        self.assertIsNone(await self.ns['database_result'](self.gate, 1, 'r', 'fp'))
++
++    def test_original_regenerate_command_is_part_of_fingerprint(self):
++        first = self.ns['fingerprint'](SimpleNamespace(question='/regenerate 1'), {})
++        second = self.ns['fingerprint'](SimpleNamespace(question='/regenerate 2'), {})
++        self.assertNotEqual(first, second)
+--- ubuntu/tests/test_question_replay_storage.py
++++ merged/tests/test_question_replay_storage.py
+@@ -0,0 +1,65 @@
++"""Real SQLModel persistence in isolated SQLite; PostgreSQL DDL is checked separately."""
++from datetime import datetime
++from types import SimpleNamespace
++from unittest.mock import Mock, patch
++import unittest
++
++from sqlalchemy.exc import IntegrityError
++from sqlmodel import Session, create_engine
++from test_question_request import load_function  # also establishes backend import path
++from apps.chat.models.chat_model import ChatRecord
++from apps.chat.curd import question_replay
++from common.core.question_gate import LeaseLostError
++
++
++class ReplayStorageTests(unittest.TestCase):
++    def setUp(self):
++        self.engine = create_engine('sqlite://')
++        ChatRecord.__table__.create(self.engine)
++        self.patcher = patch.object(question_replay, 'engine', self.engine)
++        self.patcher.start()
++        self.lease = SimpleNamespace(ensure_active=Mock())
++        with Session(self.engine) as session:
++            session.add(ChatRecord(id=1, chat_id=1, request_id='r1', status='PROCESSING',
++                                   request_fingerprint='fp', finish=True, create_time=datetime.now()))
++            session.commit()
++
++    def tearDown(self):
++        self.patcher.stop()
++        self.engine.dispose()
++
++    def test_completion_is_durable_and_findable_by_request(self):
++        question_replay.finalize(1, False, self.lease)
++        record = question_replay.lookup(1, 'r1')
++        self.assertEqual(record.status, 'SUCCESS')
++        self.assertIsNotNone(record.finish_time)
++
++    def test_saved_error_wins_over_finish_true(self):
++        with Session(self.engine) as session:
++            record = session.get(ChatRecord, 1)
++            record.error = 'SQL parsing failed'
++            session.add(record)
++            session.commit()
++        result = question_replay.finalize(1, False, self.lease)
++        self.assertEqual(result.status, 'FAILED')
++        self.assertEqual(result.error, 'SQL parsing failed')
++
++    def test_submission_failure_has_replayable_message(self):
++        result = question_replay.finalize(1, True, self.lease)
++        self.assertEqual(result.status, 'FAILED')
++        self.assertTrue(result.error)
++
++    def test_lost_lease_does_not_publish_terminal_state(self):
++        self.lease.ensure_active.side_effect = LeaseLostError('lost')
++        with self.assertRaises(LeaseLostError):
++            question_replay.finalize(1, False, self.lease)
++        self.assertEqual(question_replay.lookup(1, 'r1').status, 'PROCESSING')
++
++    def test_unique_request_and_nullable_legacy_records(self):
++        with Session(self.engine) as session:
++            session.add(ChatRecord(id=2, chat_id=1, request_id='r1'))
++            with self.assertRaises(IntegrityError):
++                session.commit()
++            session.rollback()
++            session.add_all([ChatRecord(id=3, chat_id=1), ChatRecord(id=4, chat_id=1)])
++            session.commit()

@@ -1,0 +1,12 @@
+[
+  {
+    "path": "backend/common/core/question_gate.py",
+    "before": "1c695efaa7a031450f376db6739dd6c9d786c0fec0faa544ce94b5c60c8015f5",
+    "after": "904bed4fe035dc39a167f38935d8d2fd6cffe00f395d01924e7ff95e83a50eef"
+  },
+  {
+    "path": "backend/apps/chat/api/chat.py",
+    "before": "1b65c43bc35ce1296cde3128cef8933e28de85f735aac8d6c38452b6fd1068d9",
+    "after": "eeec021ce2d123daa42293ad1229115a007cf09323f88e47a1b402b51babe43d"
+  }
+]

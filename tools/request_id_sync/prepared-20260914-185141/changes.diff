@@ -1,0 +1,45 @@
+--- ubuntu/backend/common/core/question_gate.py
++++ merged/backend/common/core/question_gate.py
+@@ -4,6 +4,7 @@
+ from contextvars import ContextVar
+ from enum import Enum
+ import logging
++import os
+ from math import isfinite
+ import time
+ from uuid import uuid4
+@@ -237,6 +238,24 @@
+         except Exception:
+             raise GateRejected('COORDINATION_UNAVAILABLE', 'Request coordination is unavailable', 503) from None
+ 
++    async def pause_for_test(self, lease):
++        """Opt-in local acceptance window; async sleep leaves lease renewal running."""
++        raw = os.environ.get('SQLBOT_TEST_PAUSE_SECONDS', '0')
++        try:
++            seconds = float(raw)
++            if not isfinite(seconds) or not 0 <= seconds <= 120:
++                raise ValueError()
++        except ValueError:
++            raise GateRejected('TEST_PAUSE_INVALID', 'SQLBOT_TEST_PAUSE_SECONDS must be between 0 and 120', 503)
++        if not seconds:
++            return
++        logger.warning('Acceptance test pause: holding request/chat locks for %s seconds before execution', seconds)
++        await asyncio.sleep(seconds)
++        try:
++            lease.ensure_active()
++        except LeaseLostError:
++            raise GateRejected('COORDINATION_UNAVAILABLE', 'Execution lease lost during test pause', 503) from None
++
+     async def shutdown(self):
+         self.closing = True
+         # During application shutdown, revoke execution and stop renewal. A live thread is
+--- ubuntu/backend/apps/chat/api/chat.py
++++ merged/backend/apps/chat/api/chat.py
+@@ -283,6 +283,7 @@
+             lease.request_id = question.request_id
+             lease.request_fingerprint = request_fingerprint
+             lease.on_completed = lambda failed: complete_result(gate, lease, failed)
++            await gate.pause_for_test(lease)
+             return await question_answer_inner(session, current_user, question, current_assistant, **kwargs)
+     except GateRejected as error:
+         return gate_error_response(error, question.request_id)

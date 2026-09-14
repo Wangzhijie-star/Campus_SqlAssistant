@@ -1,0 +1,67 @@
+[
+  {
+    "path": "backend/common/core/question_gate.py",
+    "before": "cd2e23c487c80e9adf70f08e8751989e278367704a655a4a91752684173c8729",
+    "after": "1c695efaa7a031450f376db6739dd6c9d786c0fec0faa544ce94b5c60c8015f5"
+  },
+  {
+    "path": "backend/common/core/idempotency_redis.py",
+    "before": "b2208d51ec54bf6d7935da48a0614660d88c6b2cedf69e5bc529087b6dc0ca23",
+    "after": "4e3f7c54299bcea6ab1c36130f5ae36daa98611a10339d01ae4e347b1f796573"
+  },
+  {
+    "path": "backend/apps/chat/models/chat_model.py",
+    "before": "dac375fad646c96606220a8cc75eaa8295fd468219ff6aadb766900790d71e87",
+    "after": "160cb33cd3dd745f7abc823bab1ff34c183a2fe77dbbeb2d0eabd809fc45b524"
+  },
+  {
+    "path": "backend/apps/chat/api/chat.py",
+    "before": "8d56b23759b8783db3e4dac99f48c48b4460a3cca7ea77308c58b567e24246d1",
+    "after": "1b65c43bc35ce1296cde3128cef8933e28de85f735aac8d6c38452b6fd1068d9"
+  },
+  {
+    "path": "backend/apps/chat/curd/chat.py",
+    "before": "d349eaa911abb6b3b5cf8642a41051ccc9acd4168b6de17d6ff672da4abea842",
+    "after": "3215a120b13c2315fa4ab4d5146a2421e9b9003948ba5f48c3879987b6ee04ab"
+  },
+  {
+    "path": "backend/apps/chat/curd/question_replay.py",
+    "before": null,
+    "after": "8a005be800e240f05398c9830b3239e8447c89779a05aca5390fbefe7545e0c7"
+  },
+  {
+    "path": "backend/alembic/versions/072_question_replay.py",
+    "before": null,
+    "after": "e54587a0150096747c1501ce353a78d5eaafb8cdf6c7e26cd0f4efed84b84099"
+  },
+  {
+    "path": "frontend/src/views/chat/answer/ChartAnswer.vue",
+    "before": "68b63f99b17eb147b177e2c808330ee196f74ba9d8c5ee00f52f4591bd41b1c8",
+    "after": "643cf9520907e7c4079020418a5a5e4c1346d6dd3f817be1b122d34332571fd3"
+  },
+  {
+    "path": "frontend/src/views/chat/index.vue",
+    "before": "be7f99929806877935a4d2672b2de7b5e811df8fe2e12a09f25f5bb5716ca958",
+    "after": "aba2096a4e9c475d9689fc66513949acd1369557de67e78a01e12659eeaf3fab"
+  },
+  {
+    "path": "tests/test_question_gate.py",
+    "before": "9fc673d8f543f6eb36c1477b5a49a7d8eac97f8984dffb66a2318f363c3f61d0",
+    "after": "a5ee31107cb388665db5292f3a2e2db708aa0794c5c97e812eecc3314e78d441"
+  },
+  {
+    "path": "tests/test_question_gate_routes.py",
+    "before": "4290b2054a78f85b6012d1f6477dc5afabf3c72737c4ac9f2d016f6805994076",
+    "after": "7a09d2bdbb0a38ceaf20c9747f62c130b0c296692c59fca0b94195d993fb11fe"
+  },
+  {
+    "path": "tests/test_question_replay.py",
+    "before": null,
+    "after": "de6f1cc634828ddb2e32b867481a65fbd7b327bcd042f8fa33639f1a80d5f0d0"
+  },
+  {
+    "path": "tests/test_question_replay_storage.py",
+    "before": null,
+    "after": "a5175d9b920dd2fba79fa584cebbde9ed75ccc31edf1eeb89f26d5c5eb5a7c06"
+  }
+]

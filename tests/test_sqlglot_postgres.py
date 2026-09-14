@@ -1,0 +1,45 @@
+"""Regression for PostgreSQL operators in SQL generated against imported Excel tables."""
+import sys
+import unittest
+from pathlib import Path
+
+import sqlglot
+from sqlglot import exp
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from test_question_request import load_function
+
+dialect = load_function('backend/apps/db/db.py', 'get_sqlglot_dialect', {
+    'equals_ignore_case': lambda value, *choices: (value or '').lower() in [v.lower() for v in choices],
+})
+extract = load_function('backend/apps/chat/task/llm.py', 'extract_tables_from_sql', {
+    'get_sqlglot_dialect': dialect, 'sqlglot': sqlglot, 'exp': exp,
+})
+
+
+class PostgresDialectTests(unittest.TestCase):
+    def test_excel_regex_query_extracts_actual_table(self):
+        query = '''SELECT "s"."Unnamed: 1", "s"."Unnamed: 5"
+                   FROM "public"."excel_scores" "s"
+                   WHERE "s"."Unnamed: 4" LIKE '%面向对象程序设计%'
+                     AND "s"."Unnamed: 5" ~ '^[0-9]+(\\.[0-9]+)?$'
+                   ORDER BY CAST("s"."Unnamed: 5" AS NUMERIC) DESC LIMIT 10'''
+        for source in ('excel', 'postgresql', 'PostgreSQL'):
+            with self.subTest(source=source):
+                self.assertEqual(extract(query, source), {'excel_scores'})
+
+    def test_existing_dialects_preserved(self):
+        for source, expected in [('mysql', 'mysql'), ('doris', 'mysql'), ('starrocks', 'mysql'),
+                                 ('sqlServer', 'tsql'), ('hive', 'hive'), ('unknown', None)]:
+            self.assertEqual(dialect(source), expected)
+
+    def test_invalid_sql_still_rejected(self):
+        self.assertEqual(extract('SELECT * FROM (', 'excel'), set())
+
+    def test_cte_still_extracts_physical_tables(self):
+        self.assertEqual(extract('WITH x AS (SELECT * FROM excel_scores) SELECT * FROM x', 'excel'),
+                         {'excel_scores'})
+
+
+if __name__ == '__main__':
+    unittest.main()
